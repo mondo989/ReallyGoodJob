@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - ReallyGoodJob</title>
+    <link rel="stylesheet" href="/css/main.css">
+    <style>
+        .dashboard {
+            padding: 2rem 0;
+        }
+        .user-info {
+            background: #f9fafb;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        .dashboard-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        .status-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="header__title">ReallyGoodJob Dashboard</h1>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span id="userEmail" class="text-secondary"></span>
+                <button id="logoutBtn" class="btn" style="background: #ef4444; color: white;">Logout</button>
+            </div>
+        </header>
+
+        <main class="dashboard">
+            <div class="user-info" id="userInfo">
+                <h2>Welcome back!</h2>
+                <p>Loading your account information...</p>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="dashboard-card">
+                    <h3 class="card-title">📧 Gmail Connection</h3>
+                    <div id="gmailStatus">
+                        <span class="status-badge status-success">✅ Connected</span>
+                        <p style="margin-top: 0.5rem; color: #6b7280;">Ready to send appreciation emails</p>
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <h3 class="card-title">🎯 Active Campaigns</h3>
+                    <div id="activeCampaigns">
+                        <p style="color: #6b7280;">Loading campaigns...</p>
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <h3 class="card-title">📊 Your Stats</h3>
+                    <div id="userStats">
+                        <p><strong>Account Type:</strong> <span id="userTier">-</span></p>
+                        <p><strong>Campaigns This Month:</strong> <span id="campaignsCount">0</span></p>
+                        <p><strong>Emails Sent:</strong> <span id="emailsSent">0</span></p>
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <h3 class="card-title">🚀 Quick Actions</h3>
+                    <div style="display: flex; flex-direction: column; gap: 1rem;">
+                        <button class="btn btn--primary" onclick="alert('Campaign browsing coming soon!')">Browse Campaigns</button>
+                        <button class="btn" style="background: #10b981; color: white;" onclick="alert('Campaign submission coming soon!')">Submit New Campaign</button>
+                        <button class="btn" style="background: #6b7280; color: white;" onclick="alert('Schedule management coming soon!')">Manage Schedules</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2024 ReallyGoodJob. Spreading positivity, one email at a time.</p>
+        </footer>
+    </div>
+
+    <script>
+        // Get JWT token from URL params or localStorage
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token') || localStorage.getItem('authToken');
+
+        if (token && urlParams.get('token')) {
+            // Store token and clean URL
+            localStorage.setItem('authToken', token);
+            window.history.replaceState({}, document.title, '/dashboard');
+        }
+
+        // Load user info
+        async function loadUserInfo() {
+            if (!token) {
+                window.location.href = '/?error=authentication_required';
+                return;
+            }
+
+            try {
+                const response = await fetch('/auth/me', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to load user info');
+                }
+
+                const user = await response.json();
+                
+                // Update UI with user info
+                document.getElementById('userEmail').textContent = user.email;
+                document.getElementById('userInfo').innerHTML = `
+                    <h2>Welcome back, ${user.name}! 👋</h2>
+                    <p><strong>Email:</strong> ${user.email}</p>
+                    <p><strong>Account Type:</strong> ${user.tier}</p>
+                    <p><strong>Member Since:</strong> ${new Date(user.createdAt).toLocaleDateString()}</p>
+                `;
+                
+                document.getElementById('userTier').textContent = user.tier;
+                
+                if (user.isAdmin) {
+                    document.getElementById('userInfo').innerHTML += `
+                        <p style="color: #10b981; font-weight: 600;">🛡️ Admin Access Enabled</p>
+                    `;
+                }
+
+            } catch (error) {
+                console.error('Error loading user info:', error);
+                localStorage.removeItem('authToken');
+                window.location.href = '/?error=session_expired';
+            }
+        }
+
+        // Logout functionality
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            try {
+                await fetch('/auth/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+            } catch (error) {
+                console.error('Logout error:', error);
+            } finally {
+                localStorage.removeItem('authToken');
+                window.location.href = '/';
+            }
+        });
+
+        // Load user info on page load
+        loadUserInfo();
+    </script>
+</body>
+</html> 

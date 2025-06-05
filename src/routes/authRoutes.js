@@ -1,13 +1,14 @@
 const express = require('express');
 const router = express.Router();
+const authController = require('../controllers/authController');
+const authMiddleware = require('../middleware/authMiddleware');
 
-// Placeholder routes - to be implemented
-router.get('/google', (req, res) => {
-  res.json({ message: 'Google OAuth integration - to be implemented' });
-});
+// Gmail OAuth2 flow
+router.get('/google', authController.redirectToGmail);
+router.get('/google/callback', authController.handleGmailCallback);
 
-router.get('/google/callback', (req, res) => {
-  res.json({ message: 'Google OAuth callback - to be implemented' });
-});
+// User session management
+router.post('/logout', authController.logout);
+router.get('/me', authMiddleware, authController.getCurrentUser);
 
 module.exports = router; 

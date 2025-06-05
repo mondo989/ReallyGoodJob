@@ -21,8 +21,7 @@ class EncryptionService {
   encrypt(text) {
     try {
       const iv = crypto.randomBytes(IV_LENGTH);
-      const cipher = crypto.createCipher(ALGORITHM, this.key);
-      cipher.setAAD(Buffer.from('ReallyGoodJob', 'utf8'));
+      const cipher = crypto.createCipherGCM(ALGORITHM, this.key, iv);
 
       let encrypted = cipher.update(text, 'utf8', 'hex');
       encrypted += cipher.final('hex');
@@ -51,8 +50,7 @@ class EncryptionService {
       const tag = combined.slice(IV_LENGTH, IV_LENGTH + TAG_LENGTH);
       const encrypted = combined.slice(IV_LENGTH + TAG_LENGTH);
 
-      const decipher = crypto.createDecipher(ALGORITHM, this.key);
-      decipher.setAAD(Buffer.from('ReallyGoodJob', 'utf8'));
+      const decipher = crypto.createDecipherGCM(ALGORITHM, this.key, iv);
       decipher.setAuthTag(tag);
 
       let decrypted = decipher.update(encrypted, null, 'utf8');

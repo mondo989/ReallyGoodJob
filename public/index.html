@@ -5,6 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ReallyGoodJob - Automated Appreciation Emails</title>
     <link rel="stylesheet" href="/css/main.css">
+    <style>
+        .error-message {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        .success-message {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #16a34a;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -14,6 +32,9 @@
         </header>
 
         <main class="main">
+            <!-- Error/Success Messages -->
+            <div id="messageContainer"></div>
+
             <section class="hero">
                 <h2 class="hero__title">Spread Gratitude, Build Connection</h2>
                 <p class="hero__description">
@@ -24,7 +45,7 @@
                 <div class="auth-section">
                     <button id="signInBtn" class="btn btn--primary">
                         <span class="btn__icon">📧</span>
-                        Sign in with Google
+                        Sign in with Gmail
                     </button>
                 </div>
             </section>
@@ -58,7 +79,56 @@
     </div>
 
     <script>
+        // Handle error/success messages from URL params
+        const urlParams = new URLSearchParams(window.location.search);
+        const error = urlParams.get('error');
+        const success = urlParams.get('success');
+        
+        function showMessage(message, type = 'error') {
+            const container = document.getElementById('messageContainer');
+            const className = type === 'error' ? 'error-message' : 'success-message';
+            const icon = type === 'error' ? '❌' : '✅';
+            
+            container.innerHTML = `
+                <div class="${className}">
+                    ${icon} ${message}
+                </div>
+            `;
+            
+            // Clear URL parameters
+            window.history.replaceState({}, document.title, '/');
+        }
+
+        // Display appropriate error/success messages
+        if (error) {
+            const errorMessages = {
+                'access_denied': 'Gmail access was denied. Please try again and grant the necessary permissions.',
+                'missing_code': 'Authentication failed. Please try signing in again.',
+                'auth_failed': 'Gmail authentication failed. Please check your connection and try again.',
+                'gmail_required': 'Only Gmail accounts are supported. Please sign in with a @gmail.com account.',
+                'authentication_required': 'Please sign in with your Gmail account to access the dashboard.',
+                'session_expired': 'Your session has expired. Please sign in again.'
+            };
+            
+            const message = errorMessages[error] || 'An error occurred during authentication. Please try again.';
+            showMessage(message, 'error');
+        }
+        
+        if (success) {
+            const successMessages = {
+                'logout': 'You have been successfully logged out.'
+            };
+            
+            const message = successMessages[success] || 'Operation completed successfully.';
+            showMessage(message, 'success');
+        }
+
+        // Gmail sign-in button handler
         document.getElementById('signInBtn').addEventListener('click', function() {
+            // Clear any existing messages
+            document.getElementById('messageContainer').innerHTML = '';
+            
+            // Redirect to Gmail OAuth
             window.location.href = '/auth/google';
         });
     </script>
