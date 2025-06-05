@@ -1,0 +1,49 @@
+{
+  "name": "reallygoodjob",
+  "version": "1.0.0",
+  "description": "Automated appreciation emailer MVP",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "build:css": "sass src/styles/main.scss public/css/main.css",
+    "watch:css": "sass --watch src/styles/main.scss public/css/main.css",
+    "db:migrate": "sequelize-cli db:migrate",
+    "db:seed": "sequelize-cli db:seed:all"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "dotenv": "^16.3.1",
+    "sequelize": "^6.35.1",
+    "pg": "^8.11.3",
+    "pg-hstore": "^2.3.4",
+    "googleapis": "^129.0.0",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "bcryptjs": "^2.4.3",
+    "crypto": "^1.0.1",
+    "multer": "^1.4.5-lts.1",
+    "csv-parser": "^3.0.0",
+    "node-cron": "^3.0.3",
+    "express-rate-limit": "^7.1.5",
+    "express-session": "^1.17.3",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2",
+    "sass": "^1.69.5",
+    "sequelize-cli": "^6.6.2"
+  },
+  "keywords": [
+    "email",
+    "automation",
+    "appreciation",
+    "gmail",
+    "oauth2"
+  ],
+  "author": "",
+  "license": "MIT"
+} 

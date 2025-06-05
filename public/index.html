@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReallyGoodJob - Automated Appreciation Emails</title>
+    <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="header__title">ReallyGoodJob</h1>
+            <p class="header__subtitle">Send automated appreciation emails with ease</p>
+        </header>
+
+        <main class="main">
+            <section class="hero">
+                <h2 class="hero__title">Spread Gratitude, Build Connection</h2>
+                <p class="hero__description">
+                    Connect your Gmail account and send personalized thank you emails to businesses, 
+                    causes, and individuals through approved campaigns.
+                </p>
+                
+                <div class="auth-section">
+                    <button id="signInBtn" class="btn btn--primary">
+                        <span class="btn__icon">📧</span>
+                        Sign in with Google
+                    </button>
+                </div>
+            </section>
+
+            <section class="features">
+                <div class="features__grid">
+                    <div class="feature">
+                        <div class="feature__icon">🎯</div>
+                        <h3 class="feature__title">Approved Campaigns</h3>
+                        <p class="feature__description">Choose from admin-approved campaigns to support causes you care about.</p>
+                    </div>
+                    
+                    <div class="feature">
+                        <div class="feature__icon">📝</div>
+                        <h3 class="feature__title">Three Moods</h3>
+                        <p class="feature__description">Express yourself with Happy, Cheerful, or Ecstatic email templates.</p>
+                    </div>
+                    
+                    <div class="feature">
+                        <div class="feature__icon">⏰</div>
+                        <h3 class="feature__title">Smart Scheduling</h3>
+                        <p class="feature__description">Schedule emails for Morning, Afternoon, or Evening delivery windows.</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2024 ReallyGoodJob. Spreading positivity, one email at a time.</p>
+        </footer>
+    </div>
+
+    <script>
+        document.getElementById('signInBtn').addEventListener('click', function() {
+            window.location.href = '/auth/google';
+        });
+    </script>
+</body>
+</html> 
