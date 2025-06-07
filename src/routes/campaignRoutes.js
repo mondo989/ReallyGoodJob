@@ -7,9 +7,10 @@ const authMiddleware = require('../middleware/authMiddleware');
 router.use(authMiddleware);
 
 // Campaign routes
-router.get('/', (req, res) => campaignController.getActiveCampaigns(req, res));
-router.post('/', (req, res) => campaignController.createCampaign(req, res));
-router.get('/my', (req, res) => campaignController.getUserCampaigns(req, res));
-router.get('/:id', (req, res) => campaignController.getCampaignDetails(req, res));
+router.get('/campaigns', (req, res) => campaignController.getActiveCampaigns(req, res));
+router.post('/campaigns', (req, res) => campaignController.createCampaign(req, res));
+router.get('/campaigns/my', (req, res) => campaignController.getUserCampaigns(req, res));
+router.get('/campaigns/:id', (req, res) => campaignController.getCampaignDetails(req, res));
+router.post('/campaigns/:id/send', (req, res) => campaignController.sendCampaignEmails(req, res));
 
 module.exports = router; 

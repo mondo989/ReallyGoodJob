@@ -94,9 +94,9 @@
                 <div class="dashboard-card">
                     <h3 class="card-title">🚀 Quick Actions</h3>
                     <div style="display: flex; flex-direction: column; gap: 1rem;">
-                        <button class="btn btn--primary" onclick="alert('Campaign browsing coming soon!')">Browse Campaigns</button>
-                        <button class="btn" style="background: #10b981; color: white;" onclick="alert('Campaign submission coming soon!')">Submit New Campaign</button>
-                        <button class="btn" style="background: #6b7280; color: white;" onclick="alert('Schedule management coming soon!')">Manage Schedules</button>
+                        <button id="browseCampaignsBtn" class="btn btn--primary">Browse Active Campaigns</button>
+                        <button id="sendEmailBtn" class="btn" style="background: #10b981; color: white;">Send Test Email</button>
+                        <button id="manageSchedulesBtn" class="btn" style="background: #6b7280; color: white;">Manage Schedules</button>
                     </div>
                 </div>
             </div>
@@ -182,8 +182,123 @@
             }
         });
 
-        // Load user info on page load
+        // Load active campaigns
+        async function loadActiveCampaigns() {
+            try {
+                const response = await fetch('/api/campaigns', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) throw new Error('Failed to load campaigns');
+
+                const data = await response.json();
+                const activeCampaigns = data.campaigns.filter(c => c.status === 'Active');
+                
+                const container = document.getElementById('activeCampaigns');
+                
+                if (activeCampaigns.length === 0) {
+                    container.innerHTML = '<p style="color: #6b7280;">No active campaigns yet. Check with admin for campaign approval.</p>';
+                    return;
+                }
+                
+                container.innerHTML = activeCampaigns.map(campaign => `
+                    <div style="border: 1px solid #e5e7eb; border-radius: 4px; padding: 1rem; margin-bottom: 0.5rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h4 style="margin: 0; color: #1f2937;">${campaign.name}</h4>
+                                <p style="margin: 0.25rem 0; color: #6b7280; font-size: 0.875rem;">${campaign.description}</p>
+                                <span style="color: #10b981; font-size: 0.875rem;">📧 ${campaign.recipientCount} recipients</span>
+                            </div>
+                            <button class="btn" style="background: #3b82f6; color: white;" data-action="send-campaign" data-campaign-id="${campaign.id}">Send Emails</button>
+                        </div>
+                    </div>
+                `).join('');
+                
+                document.getElementById('campaignsCount').textContent = activeCampaigns.length;
+            } catch (error) {
+                console.error('Error loading campaigns:', error);
+                document.getElementById('activeCampaigns').innerHTML = '<p style="color: #ef4444;">Error loading campaigns</p>';
+            }
+        }
+
+        // Send campaign emails
+        async function sendCampaignEmails(campaignId) {
+            if (!confirm('Are you sure you want to send emails for this campaign?')) return;
+            
+            try {
+                const response = await fetch(`/api/campaigns/${campaignId}/send`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) throw new Error('Failed to send emails');
+                
+                const result = await response.json();
+                alert(`Success! ${result.sentCount || 0} emails sent.`);
+                
+                // Refresh campaigns
+                loadActiveCampaigns();
+            } catch (error) {
+                console.error('Error sending emails:', error);
+                alert('Failed to send emails: ' + error.message);
+            }
+        }
+
+        // Send test email
+        async function sendTestEmail() {
+            try {
+                const response = await fetch('/api/test-email', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) throw new Error('Failed to send test email');
+                
+                alert('Test email sent successfully!');
+            } catch (error) {
+                console.error('Error sending test email:', error);
+                alert('Failed to send test email: ' + error.message);
+            }
+        }
+
+        // Event handlers for dashboard buttons
+        document.addEventListener('click', (e) => {
+            const target = e.target;
+            if (target.matches('[data-action]')) {
+                const action = target.dataset.action;
+                const campaignId = target.dataset.campaignId;
+                
+                switch (action) {
+                    case 'send-campaign':
+                        sendCampaignEmails(campaignId);
+                        break;
+                }
+            }
+        });
+
+        // Quick action buttons
+        document.getElementById('browseCampaignsBtn').addEventListener('click', () => {
+            loadActiveCampaigns();
+            alert('Active campaigns refreshed!');
+        });
+
+        document.getElementById('sendEmailBtn').addEventListener('click', sendTestEmail);
+
+        document.getElementById('manageSchedulesBtn').addEventListener('click', () => {
+            alert('Schedule management coming soon!');
+        });
+
+        // Load user info and campaigns on page load
         loadUserInfo();
+        loadActiveCampaigns();
     </script>
 </body>
 </html> 

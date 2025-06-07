@@ -77,6 +77,33 @@ app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/admin.html'));
 });
 
+// Test email endpoint
+app.post('/api/test-email', authMiddleware, async (req, res) => {
+  try {
+    const gmailService = require('./services/gmailService');
+    const { TemplateMood } = require('./models/database');
+    
+    // Get a random mood for testing
+    const moods = await TemplateMood.findAll();
+    const randomMood = moods[Math.floor(Math.random() * moods.length)];
+    
+    // Send test email to the authenticated user
+    await gmailService.sendEmail(
+      req.user.id,
+      req.user.email,
+      req.user.name || 'Friend',
+      'Test Email from ReallyGoodJob',
+      `This is a test email to verify your email sending is working! 🎉\n\nMood: ${randomMood?.name || 'Happy'}\n\nBest regards,\nReallyGoodJob Team`,
+      { mood: randomMood?.name || 'Happy' }
+    );
+    
+    res.json({ success: true, message: 'Test email sent successfully!' });
+  } catch (error) {
+    console.error('Error sending test email:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });

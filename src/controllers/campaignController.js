@@ -23,7 +23,7 @@ class CampaignController {
           },
           {
             model: Recipient,
-            as: 'recipients'
+            as: 'Recipients'
           }
         ],
         order: [['approvedAt', 'DESC']]
@@ -36,7 +36,7 @@ class CampaignController {
           name: campaign.name,
           description: campaign.description,
           createdBy: campaign.creator.name,
-          recipientCount: campaign.recipients.length,
+          recipientCount: campaign.Recipients.length,
           approvedAt: campaign.approvedAt,
           expirationAt: campaign.expirationAt
         }))
@@ -73,7 +73,7 @@ class CampaignController {
           },
           {
             model: Recipient,
-            as: 'recipients',
+            as: 'Recipients',
             attributes: ['id', 'email', 'displayName', 'personalizedName']
           }
         ]
@@ -92,7 +92,7 @@ class CampaignController {
           name: campaign.name,
           description: campaign.description,
           createdBy: campaign.creator.name,
-          recipients: campaign.recipients,
+          recipients: campaign.Recipients,
           approvedAt: campaign.approvedAt,
           expirationAt: campaign.expirationAt
         }
@@ -183,7 +183,7 @@ class CampaignController {
         include: [
           {
             model: Recipient,
-            as: 'recipients'
+            as: 'Recipients'
           }
         ],
         order: [['createdAt', 'DESC']]
@@ -196,7 +196,7 @@ class CampaignController {
           name: campaign.name,
           description: campaign.description,
           status: campaign.status,
-          recipientCount: campaign.recipients.length,
+          recipientCount: campaign.Recipients.length,
           createdAt: campaign.createdAt,
           approvedAt: campaign.approvedAt,
           expirationAt: campaign.expirationAt
@@ -206,6 +206,102 @@ class CampaignController {
       console.error('Error fetching user campaigns:', error);
       res.status(500).json({
         error: 'Failed to fetch your campaigns'
+      });
+    }
+  }
+
+  /**
+   * Send emails for a campaign
+   * POST /campaigns/:id/send
+   */
+  async sendCampaignEmails(req, res) {
+    try {
+      const { id } = req.params;
+      const user = req.user;
+
+      // Get campaign with recipients
+      const campaign = await Campaign.findOne({
+        where: { 
+          id,
+          status: config.CAMPAIGN_STATUS.ACTIVE,
+          expirationAt: {
+            [require('sequelize').Op.gt]: new Date()
+          }
+        },
+        include: [
+          {
+            model: Recipient,
+            as: 'Recipients'
+          }
+        ]
+      });
+
+      if (!campaign) {
+        return res.status(404).json({
+          error: 'Campaign not found or not available'
+        });
+      }
+
+      if (campaign.Recipients.length === 0) {
+        return res.status(400).json({
+          error: 'No recipients found for this campaign'
+        });
+      }
+
+      const gmailService = require('../services/gmailService');
+      const { TemplateMood } = require('../models/database');
+      
+      // Get a random mood for variety
+      const moods = await TemplateMood.findAll();
+      const randomMood = moods[Math.floor(Math.random() * moods.length)];
+
+      let sentCount = 0;
+      const errors = [];
+
+      // Send emails to all recipients
+      for (const recipient of campaign.Recipients) {
+        try {
+          const subject = `${campaign.name} - You're appreciated! 🎉`;
+          const message = `Hello ${recipient.personalizedName},\n\n${campaign.description}\n\nThis message was sent with love through ReallyGoodJob!\n\nSent by: ${user.name || user.email}\nMood: ${randomMood?.name || 'Happy'}\n\nBest regards,\nThe ReallyGoodJob Team`;
+          
+          await gmailService.sendEmail(
+            user.id,
+            recipient.email,
+            recipient.personalizedName,
+            subject,
+            message,
+            {
+              campaignId: campaign.id,
+              recipientId: recipient.id,
+              mood: randomMood?.name || 'Happy',
+              senderName: user.name || user.email
+            }
+          );
+          
+          sentCount++;
+          console.log(`📧 Email sent to ${recipient.email} for campaign "${campaign.name}"`);
+        } catch (emailError) {
+          console.error(`Failed to send email to ${recipient.email}:`, emailError);
+          errors.push({
+            recipient: recipient.email,
+            error: emailError.message
+          });
+        }
+      }
+
+      console.log(`✅ Campaign "${campaign.name}" sent ${sentCount}/${campaign.Recipients.length} emails successfully`);
+
+      res.json({
+        success: true,
+        sentCount,
+        totalRecipients: campaign.Recipients.length,
+        errors: errors.length > 0 ? errors : undefined,
+        message: `Successfully sent ${sentCount} out of ${campaign.Recipients.length} emails`
+      });
+    } catch (error) {
+      console.error('Error sending campaign emails:', error);
+      res.status(500).json({
+        error: 'Failed to send campaign emails'
       });
     }
   }

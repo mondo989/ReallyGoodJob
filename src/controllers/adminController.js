@@ -17,7 +17,8 @@ class AdminController {
             attributes: ['id', 'email', 'name']
           },
           {
-            model: Recipient
+            model: Recipient,
+            as: 'Recipients'
           }
         ],
         order: [['createdAt', 'DESC']]
@@ -203,7 +204,8 @@ class AdminController {
             attributes: ['id', 'email', 'name']
           },
           {
-            model: Recipient
+            model: Recipient,
+            as: 'Recipients'
           }
         ],
         order: [['createdAt', 'DESC']]
@@ -243,6 +245,7 @@ class AdminController {
         include: [
           {
             model: Recipient,
+            as: 'Recipients',
             attributes: ['id', 'email', 'displayName', 'personalizedName']
           }
         ]
