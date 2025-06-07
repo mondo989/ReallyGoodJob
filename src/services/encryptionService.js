@@ -1,9 +1,8 @@
 const crypto = require('crypto');
 const config = require('../config/config');
 
-const ALGORITHM = 'aes-256-gcm';
+const ALGORITHM = 'aes-256-cbc';
 const IV_LENGTH = 16; // 128 bits
-const TAG_LENGTH = 16; // 128 bits
 
 class EncryptionService {
   constructor() {
@@ -21,15 +20,13 @@ class EncryptionService {
   encrypt(text) {
     try {
       const iv = crypto.randomBytes(IV_LENGTH);
-      const cipher = crypto.createCipherGCM(ALGORITHM, this.key, iv);
+      const cipher = crypto.createCipheriv(ALGORITHM, this.key, iv);
 
       let encrypted = cipher.update(text, 'utf8', 'hex');
       encrypted += cipher.final('hex');
       
-      const tag = cipher.getAuthTag();
-      
-      // Combine iv + tag + encrypted data
-      const combined = Buffer.concat([iv, tag, Buffer.from(encrypted, 'hex')]);
+      // Combine iv + encrypted data
+      const combined = Buffer.concat([iv, Buffer.from(encrypted, 'hex')]);
       return combined.toString('base64');
     } catch (error) {
       throw new Error(`Encryption failed: ${error.message}`);
@@ -45,13 +42,11 @@ class EncryptionService {
     try {
       const combined = Buffer.from(encryptedData, 'base64');
       
-      // Extract iv, tag, and encrypted data
+      // Extract iv and encrypted data
       const iv = combined.slice(0, IV_LENGTH);
-      const tag = combined.slice(IV_LENGTH, IV_LENGTH + TAG_LENGTH);
-      const encrypted = combined.slice(IV_LENGTH + TAG_LENGTH);
+      const encrypted = combined.slice(IV_LENGTH);
 
-      const decipher = crypto.createDecipherGCM(ALGORITHM, this.key, iv);
-      decipher.setAuthTag(tag);
+      const decipher = crypto.createDecipheriv(ALGORITHM, this.key, iv);
 
       let decrypted = decipher.update(encrypted, null, 'utf8');
       decrypted += decipher.final('utf8');
