@@ -1,17 +1,15 @@
 const express = require('express');
 const router = express.Router();
+const campaignController = require('../controllers/campaignController');
+const authMiddleware = require('../middleware/authMiddleware');
 
-// Placeholder routes - to be implemented
-router.get('/campaigns', (req, res) => {
-  res.json({ message: 'Get campaigns - to be implemented' });
-});
+// Apply auth middleware to all routes
+router.use(authMiddleware);
 
-router.post('/campaigns', (req, res) => {
-  res.json({ message: 'Create campaign - to be implemented' });
-});
-
-router.get('/campaigns/:id', (req, res) => {
-  res.json({ message: 'Get campaign details - to be implemented' });
-});
+// Campaign routes
+router.get('/', (req, res) => campaignController.getActiveCampaigns(req, res));
+router.post('/', (req, res) => campaignController.createCampaign(req, res));
+router.get('/my', (req, res) => campaignController.getUserCampaigns(req, res));
+router.get('/:id', (req, res) => campaignController.getCampaignDetails(req, res));
 
 module.exports = router; 
