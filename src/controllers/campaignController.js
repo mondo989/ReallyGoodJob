@@ -35,6 +35,7 @@ class CampaignController {
           id: campaign.id,
           name: campaign.name,
           description: campaign.description,
+          status: campaign.status,
           createdBy: campaign.creator.name,
           recipientCount: campaign.Recipients.length,
           approvedAt: campaign.approvedAt,
