@@ -7,6 +7,12 @@ const encryptionService = require('../services/encryptionService');
 class AuthController {
   constructor() {
     // Initialize Google OAuth2 client
+    console.log('🔧 Initializing OAuth2 client with:', {
+      clientId: config.GOOGLE_CLIENT_ID ? `${config.GOOGLE_CLIENT_ID.substring(0, 20)}...` : 'MISSING',
+      clientSecret: config.GOOGLE_CLIENT_SECRET ? 'Present' : 'MISSING',
+      redirectUri: config.GOOGLE_REDIRECT_URI
+    });
+    
     this.oauth2Client = new google.auth.OAuth2(
       config.GOOGLE_CLIENT_ID,
       config.GOOGLE_CLIENT_SECRET,
@@ -44,6 +50,12 @@ class AuthController {
   async handleGmailCallback(req, res) {
     try {
       const { code, error: authError } = req.query;
+      
+      console.log('🎯 OAuth Callback received:', {
+        hasCode: !!code,
+        hasError: !!authError,
+        query: req.query
+      });
 
       // Handle authorization errors
       if (authError) {
@@ -52,15 +64,48 @@ class AuthController {
       }
 
       if (!code) {
+        console.error('No authorization code received');
         return res.redirect('/?error=missing_code');
       }
 
       // Exchange authorization code for tokens
-      const { tokens } = await this.oauth2Client.getAccessToken(code);
+      console.log('🔄 Exchanging authorization code for tokens...');
+      console.log('🔍 Code received:', code ? 'Present' : 'Missing');
+      
+      let tokens;
+      try {
+        // Use getToken instead of getAccessToken for better compatibility
+        const response = await this.oauth2Client.getToken(code);
+        console.log('🔍 Raw response:', { 
+          hasTokens: !!response.tokens,
+          responseType: typeof response
+        });
+        
+        tokens = response.tokens;
+        
+        if (!tokens) {
+          throw new Error('No tokens object in response');
+        }
+        
+      } catch (tokenError) {
+        console.error('Token exchange error details:', {
+          message: tokenError.message,
+          code: tokenError.code,
+          status: tokenError.status
+        });
+        throw new Error(`Token exchange failed: ${tokenError.message}`);
+      }
       
       if (!tokens.access_token) {
-        throw new Error('No access token received');
+        throw new Error('No access token in response');
       }
+
+      console.log('✅ Tokens received:', { 
+        hasAccessToken: !!tokens.access_token,
+        hasRefreshToken: !!tokens.refresh_token,
+        expiryDate: tokens.expiry_date,
+        scope: tokens.scope
+      });
 
       // Set credentials to get user info
       this.oauth2Client.setCredentials(tokens);
@@ -126,7 +171,7 @@ class AuthController {
         // Update existing user's tokens and info
         const encryptedTokens = encryptionService.encryptTokens({
           access_token: tokens.access_token,
-          refresh_token: tokens.refresh_token,
+          refresh_token: tokens.refresh_token || null, // May be null on subsequent authorizations
           expires_at: tokens.expiry_date || Date.now() + (3600 * 1000) // 1 hour default
         });
 
@@ -140,7 +185,7 @@ class AuthController {
         // Create new user
         const encryptedTokens = encryptionService.encryptTokens({
           access_token: tokens.access_token,
-          refresh_token: tokens.refresh_token,
+          refresh_token: tokens.refresh_token || null, // May be null on subsequent authorizations
           expires_at: tokens.expiry_date || Date.now() + (3600 * 1000)
         });
 
