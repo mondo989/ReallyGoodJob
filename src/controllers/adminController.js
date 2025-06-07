@@ -234,6 +234,113 @@ class AdminController {
   }
 
   /**
+   * Create a new campaign as admin
+   * POST /admin/campaigns/create
+   */
+  async createCampaign(req, res) {
+    try {
+      const { name, description, expirationAt, status, recipients } = req.body;
+      const adminUser = req.user;
+
+      // Validation
+      if (!name || !description || !expirationAt || !status) {
+        return res.status(400).json({
+          error: 'Name, description, expiration date, and status are required'
+        });
+      }
+
+      if (!recipients || !Array.isArray(recipients) || recipients.length === 0) {
+        return res.status(400).json({
+          error: 'At least one recipient is required'
+        });
+      }
+
+      // Validate status
+      const validStatuses = [config.CAMPAIGN_STATUS.ACTIVE, config.CAMPAIGN_STATUS.PENDING];
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({
+          error: 'Invalid status. Must be Active or Pending'
+        });
+      }
+
+      // Validate expiration date
+      const expiration = new Date(expirationAt);
+      if (expiration <= new Date()) {
+        return res.status(400).json({
+          error: 'Expiration date must be in the future'
+        });
+      }
+
+      // Validate recipients
+      for (const recipient of recipients) {
+        if (!recipient.email || !recipient.email.includes('@')) {
+          return res.status(400).json({
+            error: 'All recipients must have valid email addresses'
+          });
+        }
+      }
+
+      // Create campaign
+      const { v4: uuidv4 } = require('uuid');
+      const campaignData = {
+        id: `camp-admin-${Date.now()}`,
+        name: name.trim(),
+        description: description.trim(),
+        status: status,
+        createdByUserId: adminUser.id,
+        expirationAt: expiration,
+        duplicateWindowDays: config.DUPLICATE_WINDOW_DAYS,
+        freeTierLimitPerMonth: config.FREE_TIER_MONTHLY_CAMPAIGNS,
+        premiumTierLimitPerDay: config.PREMIUM_TIER_SENDS_PER_CAMPAIGN_DAY
+      };
+
+      // If admin creates it as Active, auto-approve it
+      if (status === config.CAMPAIGN_STATUS.ACTIVE) {
+        campaignData.approvedByAdminId = adminUser.id;
+        campaignData.approvedAt = new Date();
+      }
+
+      const campaign = await Campaign.create(campaignData);
+
+      // Create recipients
+      const recipientData = recipients.map(recipient => ({
+        campaignId: campaign.id,
+        email: recipient.email.trim(),
+        displayName: recipient.displayName ? recipient.displayName.trim() : recipient.email.split('@')[0],
+        personalizedName: recipient.displayName ? recipient.displayName.trim() : recipient.email.split('@')[0]
+      }));
+
+      await Recipient.bulkCreate(recipientData);
+
+      console.log(`🎯 Campaign "${campaign.name}" created by admin ${adminUser.email} with status ${status}`);
+
+      res.json({
+        success: true,
+        message: `Campaign created successfully with status: ${status}`,
+        campaign: {
+          id: campaign.id,
+          name: campaign.name,
+          description: campaign.description,
+          status: campaign.status,
+          createdBy: {
+            id: adminUser.id,
+            email: adminUser.email,
+            name: adminUser.name
+          },
+          recipientCount: recipients.length,
+          expirationAt: campaign.expirationAt,
+          approvedAt: campaign.approvedAt
+        }
+      });
+    } catch (error) {
+      console.error('Error creating campaign as admin:', error);
+      res.status(500).json({
+        error: 'Failed to create campaign'
+      });
+    }
+  }
+
+  /**
    * Get campaign recipients
    * GET /admin/campaigns/:id/recipients
    */

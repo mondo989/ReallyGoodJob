@@ -1,9 +1,9 @@
 const { Sequelize } = require('sequelize');
 const config = require('../config/config');
 
-// Initialize Sequelize with PostgreSQL
+// Initialize Sequelize with SQLite
 const sequelize = new Sequelize(config.DATABASE_URL, {
-  dialect: 'postgres',
+  dialect: 'sqlite',
   logging: config.NODE_ENV === 'development' ? console.log : false,
   define: {
     timestamps: true,

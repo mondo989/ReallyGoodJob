@@ -147,15 +147,16 @@ class GmailService {
       `From: ${from}`,
       `To: ${to}`,
       `Subject: ${subject}`,
-      'Content-Type: text/plain; charset="UTF-8"',
+      'Content-Type: text/html; charset="UTF-8"',
       'MIME-Version: 1.0',
       '',
-      bodyText
+      // Convert plain text to HTML with line breaks
+      bodyText.replace(/\n/g, '<br>')
     ];
 
-    // Add tracking pixel if emailLogId is provided
-    if (emailLogId) {
-      lines.push('');
+    // Add tracking pixel if emailLogId is provided and valid
+    if (emailLogId && typeof emailLogId === 'string' && emailLogId.length < 100) {
+      lines.push('<br><br>');
       lines.push(`<img src="${this.getTrackingPixelUrl(emailLogId)}" alt="" width="1" height="1" style="display:none;" />`);
     }
 
@@ -169,7 +170,7 @@ class GmailService {
     const baseUrl = config.NODE_ENV === 'production' 
       ? 'https://yourdomain.com' 
       : `http://localhost:${config.PORT}`;
-    return `${baseUrl}/track/open.png?emailLogId=${emailLogId}`;
+    return `${baseUrl}/track/open.png?emailLogId=${encodeURIComponent(emailLogId)}`;
   }
 
   /**

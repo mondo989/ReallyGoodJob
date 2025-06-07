@@ -20,6 +20,7 @@ router.use(adminMiddleware);
 // Admin campaign management routes
 router.get('/campaigns', (req, res) => adminController.getAllCampaigns(req, res));
 router.get('/campaigns/pending', (req, res) => adminController.getPendingCampaigns(req, res));
+router.post('/campaigns/create', (req, res) => adminController.createCampaign(req, res));
 router.put('/campaigns/:id', (req, res) => adminController.updateCampaign(req, res));
 router.get('/campaigns/:id/recipients', (req, res) => adminController.getCampaignRecipients(req, res));
 router.put('/campaigns/:id/recipients', (req, res) => adminController.updateCampaignRecipients(req, res));

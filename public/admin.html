@@ -246,6 +246,7 @@
                 <button class="nav-tab active" data-section="overview">📊 Overview</button>
                 <button class="nav-tab" data-section="campaigns">📋 All Campaigns</button>
                 <button class="nav-tab" data-section="pending">⏳ Pending Approval</button>
+                <button class="nav-tab" data-section="create">➕ Create Campaign</button>
             </div>
 
             <!-- Overview Section -->
@@ -285,6 +286,57 @@
                 <h3>Pending Approval</h3>
                 <div class="campaigns-grid" id="pendingCampaignsGrid">
                     <p style="color: #6b7280;">Loading pending campaigns...</p>
+                </div>
+            </div>
+
+            <!-- Create Campaign Section -->
+            <div id="create" class="admin-section">
+                <h3>Create New Campaign</h3>
+                <div style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 2rem; max-width: 600px;">
+                    <form id="createCampaignForm">
+                        <div class="form-group">
+                            <label class="form-label" for="createName">Campaign Name</label>
+                            <input type="text" id="createName" class="form-input" required placeholder="e.g., Thank Local Coffee Shops">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="createDescription">Description</label>
+                            <textarea id="createDescription" class="form-input form-textarea" required placeholder="Brief description of what this campaign is about..."></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="createExpiration">Expiration Date</label>
+                            <input type="datetime-local" id="createExpiration" class="form-input" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Recipients</label>
+                            <div id="createRecipientsList" style="max-height: 200px; overflow-y: auto; border: 1px solid #d1d5db; border-radius: 4px; padding: 1rem; margin-bottom: 0.5rem;">
+                                <p style="color: #6b7280;">No recipients added yet. Add recipients below.</p>
+                            </div>
+                            <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                                <input type="email" id="createRecipientEmail" class="form-input" placeholder="Enter email address" style="flex: 1;">
+                                <input type="text" id="createRecipientName" class="form-input" placeholder="Display name (optional)" style="flex: 1;">
+                                <button type="button" id="createAddRecipient" class="btn" style="background: #10b981; color: white; white-space: nowrap;">Add</button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="createStatus">Status</label>
+                            <select id="createStatus" class="form-input" required>
+                                <option value="Active">Active (Ready to send)</option>
+                                <option value="Pending">Pending (Requires approval)</option>
+                            </select>
+                            <p style="color: #6b7280; font-size: 0.875rem; margin-top: 0.25rem;">
+                                As an admin, you can create campaigns that are immediately active or require approval.
+                            </p>
+                        </div>
+                        
+                        <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
+                            <button type="button" id="resetCreateForm" class="btn" style="background: #6b7280; color: white;">Reset Form</button>
+                            <button type="submit" class="btn btn--primary">Create Campaign</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </main>
@@ -377,6 +429,8 @@
                 loadPendingCampaigns();
             } else if (section === 'overview') {
                 loadStats();
+            } else if (section === 'create') {
+                initializeCreateForm();
             }
         }
 
@@ -477,6 +531,7 @@
 
         // State for recipients
         let currentRecipients = [];
+        let createRecipients = [];
 
         // Edit campaign
         async function editCampaign(campaignId) {
@@ -625,6 +680,116 @@
             }
         }
 
+        // Initialize create form
+        function initializeCreateForm() {
+            // Set default expiration to 30 days from now
+            const defaultExpiration = new Date();
+            defaultExpiration.setDate(defaultExpiration.getDate() + 30);
+            defaultExpiration.setHours(23, 59, 0, 0);
+            document.getElementById('createExpiration').value = defaultExpiration.toISOString().slice(0, 16);
+            
+            // Reset recipients
+            createRecipients = [];
+            renderCreateRecipients();
+        }
+
+        // Add recipient to create form
+        function addCreateRecipient() {
+            const email = document.getElementById('createRecipientEmail').value.trim();
+            const displayName = document.getElementById('createRecipientName').value.trim();
+            
+            if (!email) {
+                alert('Please enter an email address');
+                return;
+            }
+            
+            if (!email.includes('@')) {
+                alert('Please enter a valid email address');
+                return;
+            }
+            
+            // Check for duplicates
+            if (createRecipients.some(r => r.email.toLowerCase() === email.toLowerCase())) {
+                alert('This email address is already in the recipients list');
+                return;
+            }
+            
+            createRecipients.push({
+                email: email,
+                displayName: displayName || null
+            });
+            
+            // Clear inputs
+            document.getElementById('createRecipientEmail').value = '';
+            document.getElementById('createRecipientName').value = '';
+            
+            renderCreateRecipients();
+        }
+
+        // Remove recipient from create form
+        function removeCreateRecipient(index) {
+            createRecipients.splice(index, 1);
+            renderCreateRecipients();
+        }
+
+        // Render create recipients list
+        function renderCreateRecipients() {
+            const container = document.getElementById('createRecipientsList');
+            
+            if (createRecipients.length === 0) {
+                container.innerHTML = '<p style="color: #6b7280;">No recipients added yet. Add recipients below.</p>';
+                return;
+            }
+            
+            container.innerHTML = createRecipients.map((recipient, index) => `
+                <div class="recipient-item" data-index="${index}">
+                    <div class="recipient-info">
+                        <div class="recipient-email">${recipient.email}</div>
+                        ${recipient.displayName ? `<div class="recipient-name">${recipient.displayName}</div>` : ''}
+                    </div>
+                    <button class="btn-remove" data-action="remove-create-recipient" data-index="${index}">Remove</button>
+                </div>
+            `).join('');
+        }
+
+        // Reset create form
+        function resetCreateForm() {
+            document.getElementById('createCampaignForm').reset();
+            createRecipients = [];
+            initializeCreateForm();
+        }
+
+        // Create campaign
+        async function createCampaign(formData) {
+            try {
+                const response = await fetch('/api/admin/campaigns/create', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Failed to create campaign');
+                }
+                
+                const result = await response.json();
+                alert(`Campaign "${formData.name}" created successfully!`);
+                
+                // Reset form and switch to campaigns view
+                resetCreateForm();
+                switchSection('campaigns');
+                
+                return result;
+            } catch (error) {
+                console.error('Error creating campaign:', error);
+                alert('Failed to create campaign: ' + error.message);
+            }
+        }
+
         // Modal controls
         document.getElementById('cancelEdit').addEventListener('click', () => {
             document.getElementById('editModal').classList.remove('active');
@@ -742,6 +907,9 @@
                     case 'remove-recipient':
                         removeRecipient(parseInt(index));
                         break;
+                    case 'remove-create-recipient':
+                        removeCreateRecipient(parseInt(index));
+                        break;
                 }
             }
         });
@@ -754,6 +922,48 @@
             if (e.key === 'Enter') {
                 addRecipient();
             }
+        });
+
+        // Create campaign form events
+        document.getElementById('createAddRecipient').addEventListener('click', addCreateRecipient);
+        document.getElementById('resetCreateForm').addEventListener('click', resetCreateForm);
+        
+        // Allow Enter key to add recipient in create form
+        document.getElementById('createRecipientEmail').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addCreateRecipient();
+            }
+        });
+
+        // Create campaign form submission
+        document.getElementById('createCampaignForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById('createName').value.trim();
+            const description = document.getElementById('createDescription').value.trim();
+            const expirationAt = document.getElementById('createExpiration').value;
+            const status = document.getElementById('createStatus').value;
+            
+            if (!name || !description || !expirationAt) {
+                alert('Please fill in all required fields');
+                return;
+            }
+            
+            if (createRecipients.length === 0) {
+                alert('Please add at least one recipient');
+                return;
+            }
+            
+            const formData = {
+                name,
+                description,
+                expirationAt,
+                status,
+                recipients: createRecipients
+            };
+            
+            await createCampaign(formData);
         });
 
         // Initialize

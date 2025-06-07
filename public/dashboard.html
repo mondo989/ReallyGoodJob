@@ -48,6 +48,122 @@
             background: #fef3c7;
             color: #92400e;
         }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        
+        .modal.active {
+            display: block;
+        }
+        
+        .modal-content {
+            background-color: #fff;
+            margin: 5% auto;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header h3 {
+            margin: 0;
+            color: #1f2937;
+        }
+        
+        .close {
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6b7280;
+        }
+        
+        .close:hover {
+            color: #ef4444;
+        }
+        
+        .modal-body {
+            padding: 1.5rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #1f2937;
+        }
+        
+        .form-group select,
+        .form-group input[type="date"] {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        
+        .schedule-options {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .radio-option:hover {
+            background: #f9fafb;
+        }
+        
+        .radio-option input[type="radio"]:checked + span {
+            font-weight: 600;
+            color: #3b82f6;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 2rem;
+        }
+        
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -105,6 +221,70 @@
         <footer class="footer">
             <p>&copy; 2024 ReallyGoodJob. Spreading positivity, one email at a time.</p>
         </footer>
+    </div>
+
+    <!-- Schedule Email Modal -->
+    <div id="scheduleModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📅 Schedule Email Campaign</h3>
+                <span class="close" id="closeScheduleModal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <h4 id="scheduleCampaignName">Campaign Name</h4>
+                    <p id="scheduleCampaignDescription" style="color: #6b7280;"></p>
+                    <p><strong>Recipients:</strong> <span id="scheduleRecipientCount"></span></p>
+                </div>
+
+                <div class="form-group">
+                    <label for="emailMood">Select Email Mood:</label>
+                    <select id="emailMood" required>
+                        <option value="">Choose a mood...</option>
+                        <option value="Happy">😊 Happy - Warm and friendly</option>
+                        <option value="Cheerful">😄 Cheerful - Upbeat and energetic</option>
+                        <option value="Ecstatic">🎉 Ecstatic - Enthusiastic and excited</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>When would you like to send?</label>
+                    <div class="schedule-options">
+                        <label class="radio-option">
+                            <input type="radio" name="sendOption" value="now" checked>
+                            <span>🚀 Send Now</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="sendOption" value="schedule">
+                            <span>📅 Schedule for Later</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div id="scheduleOptions" class="form-group" style="display: none;">
+                    <label for="sendWindow">Select Time Window:</label>
+                    <select id="sendWindow">
+                        <option value="morning">🌅 Morning (8:00 AM - 12:00 PM)</option>
+                        <option value="afternoon">☀️ Afternoon (12:00 PM - 5:00 PM)</option>
+                        <option value="evening">🌆 Evening (5:00 PM - 9:00 PM)</option>
+                    </select>
+                    
+                    <label for="sendDate">Select Date:</label>
+                    <input type="date" id="sendDate" required>
+                    
+                    <p style="color: #6b7280; font-size: 0.875rem; margin-top: 0.5rem;">
+                        📝 <strong>Note:</strong> Free tier allows 1 send per day. Premium tier allows up to 3 sends per day (one per time window).
+                    </p>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelSchedule">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="confirmSchedule">
+                        <span id="scheduleButtonText">🚀 Send Now</span>
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -195,6 +375,7 @@
 
                 const data = await response.json();
                 const activeCampaigns = data.campaigns.filter(c => c.status === 'Active');
+                allCampaigns = activeCampaigns; // Store globally for modal
                 
                 const container = document.getElementById('activeCampaigns');
                 
@@ -211,7 +392,7 @@
                                 <p style="margin: 0.25rem 0; color: #6b7280; font-size: 0.875rem;">${campaign.description}</p>
                                 <span style="color: #10b981; font-size: 0.875rem;">📧 ${campaign.recipientCount} recipients</span>
                             </div>
-                            <button class="btn" style="background: #3b82f6; color: white;" data-action="send-campaign" data-campaign-id="${campaign.id}">Send Emails</button>
+                            <button class="btn" style="background: #3b82f6; color: white;" data-action="schedule-campaign" data-campaign-id="${campaign.id}">📅 Schedule Emails</button>
                         </div>
                     </div>
                 `).join('');
@@ -223,25 +404,76 @@
             }
         }
 
+        // Global variables for modal
+        let currentCampaign = null;
+        let allCampaigns = [];
+
+        // Show schedule modal
+        function showScheduleModal(campaignId) {
+            currentCampaign = allCampaigns.find(c => c.id === campaignId);
+            if (!currentCampaign) return;
+            
+            // Populate modal with campaign info
+            document.getElementById('scheduleCampaignName').textContent = currentCampaign.name;
+            document.getElementById('scheduleCampaignDescription').textContent = currentCampaign.description;
+            document.getElementById('scheduleRecipientCount').textContent = `${currentCampaign.recipientCount} recipients`;
+            
+            // Reset form
+            document.getElementById('emailMood').value = '';
+            document.querySelector('input[name="sendOption"][value="now"]').checked = true;
+            document.getElementById('scheduleOptions').style.display = 'none';
+            document.getElementById('scheduleButtonText').textContent = '🚀 Send Now';
+            
+            // Set minimum date to today
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('sendDate').value = today;
+            document.getElementById('sendDate').min = today;
+            
+            // Show modal
+            document.getElementById('scheduleModal').classList.add('active');
+        }
+
         // Send campaign emails
-        async function sendCampaignEmails(campaignId) {
-            if (!confirm('Are you sure you want to send emails for this campaign?')) return;
+        async function sendCampaignEmails(campaignId, options = {}) {
+            const { mood, sendNow = true, window, date } = options;
+            
+            if (!mood) {
+                alert('Please select an email mood');
+                return;
+            }
             
             try {
+                const payload = {
+                    mood: mood,
+                    sendNow: sendNow
+                };
+                
+                if (!sendNow) {
+                    payload.window = window;
+                    payload.scheduledDate = date;
+                }
+                
                 const response = await fetch(`/api/campaigns/${campaignId}/send`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
-                    }
+                    },
+                    body: JSON.stringify(payload)
                 });
                 
                 if (!response.ok) throw new Error('Failed to send emails');
                 
                 const result = await response.json();
-                alert(`Success! ${result.sentCount || 0} emails sent.`);
                 
-                // Refresh campaigns
+                if (sendNow) {
+                    alert(`Success! ${result.sentCount || 0} emails sent with ${mood} mood.`);
+                } else {
+                    alert(`Success! Campaign scheduled for ${window} window on ${date} with ${mood} mood.`);
+                }
+                
+                // Close modal and refresh campaigns
+                document.getElementById('scheduleModal').classList.remove('active');
                 loadActiveCampaigns();
             } catch (error) {
                 console.error('Error sending emails:', error);
@@ -277,11 +509,76 @@
                 const campaignId = target.dataset.campaignId;
                 
                 switch (action) {
-                    case 'send-campaign':
-                        sendCampaignEmails(campaignId);
+                    case 'schedule-campaign':
+                        showScheduleModal(campaignId);
                         break;
                 }
             }
+        });
+
+        // Modal event handlers
+        document.addEventListener('DOMContentLoaded', () => {
+            // Close modal handlers
+            document.getElementById('closeScheduleModal').addEventListener('click', () => {
+                document.getElementById('scheduleModal').classList.remove('active');
+            });
+            
+            document.getElementById('cancelSchedule').addEventListener('click', () => {
+                document.getElementById('scheduleModal').classList.remove('active');
+            });
+            
+            // Close modal when clicking outside
+            document.getElementById('scheduleModal').addEventListener('click', (e) => {
+                if (e.target === document.getElementById('scheduleModal')) {
+                    document.getElementById('scheduleModal').classList.remove('active');
+                }
+            });
+            
+            // Send option change handler
+            document.querySelectorAll('input[name="sendOption"]').forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    const scheduleOptions = document.getElementById('scheduleOptions');
+                    const buttonText = document.getElementById('scheduleButtonText');
+                    
+                    if (e.target.value === 'schedule') {
+                        scheduleOptions.style.display = 'block';
+                        buttonText.textContent = '📅 Schedule Email';
+                    } else {
+                        scheduleOptions.style.display = 'none';
+                        buttonText.textContent = '🚀 Send Now';
+                    }
+                });
+            });
+            
+            // Confirm schedule button
+            document.getElementById('confirmSchedule').addEventListener('click', () => {
+                const mood = document.getElementById('emailMood').value;
+                const sendOption = document.querySelector('input[name="sendOption"]:checked').value;
+                
+                if (!mood) {
+                    alert('Please select an email mood');
+                    return;
+                }
+                
+                if (sendOption === 'now') {
+                    sendCampaignEmails(currentCampaign.id, { mood, sendNow: true });
+                } else {
+                    const window = document.getElementById('sendWindow').value;
+                    const date = document.getElementById('sendDate').value;
+                    
+                    if (!date) {
+                        alert('Please select a date');
+                        return;
+                    }
+                    
+                    sendCampaignEmails(currentCampaign.id, { 
+                        mood, 
+                        sendNow: false, 
+                        window, 
+                        date 
+                    });
+                }
+            });
         });
 
         // Quick action buttons

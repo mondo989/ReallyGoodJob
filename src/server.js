@@ -31,8 +31,11 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'"],
       scriptSrc: config.NODE_ENV === 'development' 
-        ? ["'self'", "'unsafe-inline'"] 
+        ? ["'self'", "'unsafe-inline'", "'unsafe-eval'"] 
         : ["'self'"],
+      scriptSrcAttr: config.NODE_ENV === 'development' 
+        ? ["'unsafe-inline'"] 
+        : ["'none'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", "data:", "https:"],
       connectSrc: ["'self'"],

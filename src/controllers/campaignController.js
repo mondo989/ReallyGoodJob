@@ -212,13 +212,54 @@ class CampaignController {
   }
 
   /**
-   * Send emails for a campaign
+   * Send or schedule emails for a campaign
    * POST /campaigns/:id/send
    */
   async sendCampaignEmails(req, res) {
     try {
       const { id } = req.params;
+      const { mood, sendNow = true, window, scheduledDate } = req.body;
       const user = req.user;
+
+      console.log(`📧 Send email request for campaign ${id}:`, {
+        mood,
+        sendNow,
+        window,
+        scheduledDate,
+        userId: user.id
+      });
+
+      // Validate mood selection
+      if (!mood || !['Happy', 'Cheerful', 'Ecstatic'].includes(mood)) {
+        return res.status(400).json({
+          error: 'Valid mood selection is required (Happy, Cheerful, or Ecstatic)'
+        });
+      }
+
+      // Validate scheduling parameters if not sending now
+      if (!sendNow) {
+        if (!window || !['morning', 'afternoon', 'evening'].includes(window)) {
+          return res.status(400).json({
+            error: 'Valid time window is required for scheduling (morning, afternoon, or evening)'
+          });
+        }
+        
+        if (!scheduledDate) {
+          return res.status(400).json({
+            error: 'Scheduled date is required'
+          });
+        }
+
+        const selectedDate = new Date(scheduledDate);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        if (selectedDate < today) {
+          return res.status(400).json({
+            error: 'Cannot schedule emails for past dates'
+          });
+        }
+      }
 
       // Get campaign with recipients
       const campaign = await Campaign.findOne({
@@ -237,6 +278,14 @@ class CampaignController {
         ]
       });
 
+      console.log(`🔍 Campaign lookup for ${id}:`, campaign ? {
+        id: campaign.id,
+        name: campaign.name,
+        status: campaign.status,
+        recipientCount: campaign.Recipients?.length || 0,
+        expirationAt: campaign.expirationAt
+      } : 'NOT FOUND');
+
       if (!campaign) {
         return res.status(404).json({
           error: 'Campaign not found or not available'
@@ -249,12 +298,75 @@ class CampaignController {
         });
       }
 
+      // If scheduling, create schedule entries
+      if (!sendNow) {
+        const { SendSchedule } = require('../models/database');
+        
+        // Map window to time ranges
+        const windowTimes = {
+          morning: { start: 8, end: 12 },
+          afternoon: { start: 12, end: 17 },
+          evening: { start: 17, end: 21 }
+        };
+        
+        const scheduleDate = new Date(scheduledDate);
+        const windowTime = windowTimes[window];
+        
+        // Set next run time to the start of the selected window
+        const nextRunAt = new Date(scheduleDate);
+        nextRunAt.setHours(windowTime.start, 0, 0, 0);
+        
+        // Get the selected mood template for scheduling
+        const { TemplateMood } = require('../models/database');
+        const selectedMood = await TemplateMood.findOne({
+          where: { name: mood }
+        });
+
+        if (!selectedMood) {
+          return res.status(400).json({
+            error: `Template mood "${mood}" not found`
+          });
+        }
+
+        // Create schedule entry
+        await SendSchedule.create({
+          campaignId: campaign.id,
+          userId: user.id,
+          currentMoodId: selectedMood.id,
+          window: window,
+          nextRunAt: nextRunAt,
+          isActive: true,
+          remainingSendsThisWindow: 1,
+          dailySendsCount: 0
+        });
+
+        console.log(`📅 Campaign "${campaign.name}" scheduled for ${window} window on ${scheduledDate} with ${mood} mood`);
+
+        return res.json({
+          success: true,
+          scheduled: true,
+          window: window,
+          scheduledDate: scheduledDate,
+          mood: mood,
+          recipientCount: campaign.Recipients.length,
+          message: `Campaign scheduled for ${window} window on ${scheduledDate} with ${mood} mood`
+        });
+      }
+
+      // Send immediately
       const gmailService = require('../services/gmailService');
       const { TemplateMood } = require('../models/database');
       
-      // Get a random mood for variety
-      const moods = await TemplateMood.findAll();
-      const randomMood = moods[Math.floor(Math.random() * moods.length)];
+      // Get the selected mood template
+      const selectedMoodTemplate = await TemplateMood.findOne({
+        where: { name: mood }
+      });
+
+      if (!selectedMoodTemplate) {
+        return res.status(400).json({
+          error: `Template mood "${mood}" not found`
+        });
+      }
 
       let sentCount = 0;
       const errors = [];
@@ -262,25 +374,52 @@ class CampaignController {
       // Send emails to all recipients
       for (const recipient of campaign.Recipients) {
         try {
-          const subject = `${campaign.name} - You're appreciated! 🎉`;
-          const message = `Hello ${recipient.personalizedName},\n\n${campaign.description}\n\nThis message was sent with love through ReallyGoodJob!\n\nSent by: ${user.name || user.email}\nMood: ${randomMood?.name || 'Happy'}\n\nBest regards,\nThe ReallyGoodJob Team`;
+          // Use the mood-specific template first
+          const subject = selectedMoodTemplate.subjectLine
+            .replace('[Campaign Name]', campaign.name)
+            .replace('[Sender Name]', user.name || user.email);
+            
+          const message = selectedMoodTemplate.bodyText
+            .replace('[Recipient Name]', recipient.personalizedName)
+            .replace('[Campaign Name]', campaign.name)
+            .replace('[Sender Name]', user.name || user.email)
+            .replace('[Sender Note]', campaign.description);
+
+          // Create email log entry with all required fields
+          const { EmailLog } = require('../models/database');
+          const emailLog = await EmailLog.create({
+            campaignId: campaign.id,
+            recipientId: recipient.id,
+            userId: user.id,
+            moodId: selectedMoodTemplate.id,
+            subjectSent: subject,
+            bodySent: message,
+            status: config.EMAIL_STATUS.SENT, // Will be updated if there's an error
+            sentAt: new Date()
+          });
           
-          await gmailService.sendEmail(
+          const emailResult = await gmailService.sendEmail(
             user.id,
             recipient.email,
-            recipient.personalizedName,
             subject,
             message,
-            {
-              campaignId: campaign.id,
-              recipientId: recipient.id,
-              mood: randomMood?.name || 'Happy',
-              senderName: user.name || user.email
-            }
+            emailLog.id // Pass the email log ID for tracking
           );
+
+          // Update email log with result if failed
+          if (!emailResult.success) {
+            await emailLog.update({
+              status: config.EMAIL_STATUS.FAILED,
+              errorMessage: emailResult.error
+            });
+          }
           
-          sentCount++;
-          console.log(`📧 Email sent to ${recipient.email} for campaign "${campaign.name}"`);
+          if (emailResult.success) {
+            sentCount++;
+            console.log(`📧 Email sent to ${recipient.email} for campaign "${campaign.name}" with ${mood} mood`);
+          } else {
+            throw new Error(emailResult.error);
+          }
         } catch (emailError) {
           console.error(`Failed to send email to ${recipient.email}:`, emailError);
           errors.push({
@@ -290,14 +429,15 @@ class CampaignController {
         }
       }
 
-      console.log(`✅ Campaign "${campaign.name}" sent ${sentCount}/${campaign.Recipients.length} emails successfully`);
+      console.log(`✅ Campaign "${campaign.name}" sent ${sentCount}/${campaign.Recipients.length} emails successfully with ${mood} mood`);
 
       res.json({
         success: true,
         sentCount,
         totalRecipients: campaign.Recipients.length,
+        mood: mood,
         errors: errors.length > 0 ? errors : undefined,
-        message: `Successfully sent ${sentCount} out of ${campaign.Recipients.length} emails`
+        message: `Successfully sent ${sentCount} out of ${campaign.Recipients.length} emails with ${mood} mood`
       });
     } catch (error) {
       console.error('Error sending campaign emails:', error);
