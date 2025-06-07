@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - ReallyGoodJob</title>
+    <link rel="stylesheet" href="/css/main.css">
+    <style>
+        .admin {
+            padding: 2rem 0;
+        }
+        .admin-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        .admin-nav {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 1rem;
+        }
+        .nav-tab {
+            padding: 0.5rem 1rem;
+            border: 1px solid #d1d5db;
+            background: white;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        .nav-tab.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+        .nav-tab:hover {
+            background: #f3f4f6;
+        }
+        .nav-tab.active:hover {
+            background: #2563eb;
+        }
+        .admin-section {
+            display: none;
+        }
+        .admin-section.active {
+            display: block;
+        }
+        .campaigns-grid {
+            display: grid;
+            gap: 1rem;
+        }
+        .campaign-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        .campaign-header {
+            display: flex;
+            justify-content: between;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .campaign-info {
+            flex: 1;
+        }
+        .campaign-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-shrink: 0;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .status-active {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .status-rejected {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .btn-small {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.875rem;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-edit {
+            background: #3b82f6;
+            color: white;
+        }
+        .btn-edit:hover {
+            background: #2563eb;
+        }
+        .btn-approve {
+            background: #10b981;
+            color: white;
+        }
+        .btn-approve:hover {
+            background: #059669;
+        }
+        .btn-reject {
+            background: #ef4444;
+            color: white;
+        }
+        .btn-reject:hover {
+            background: #dc2626;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        .form-textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #3b82f6;
+        }
+        .stat-label {
+            color: #6b7280;
+            margin-top: 0.5rem;
+        }
+        .recipient-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem;
+            margin-bottom: 0.5rem;
+            background: #f9fafb;
+            border-radius: 4px;
+            border: 1px solid #e5e7eb;
+        }
+        .recipient-info {
+            flex: 1;
+        }
+        .recipient-email {
+            font-weight: 500;
+            color: #1f2937;
+        }
+        .recipient-name {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+        .btn-remove {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+        .btn-remove:hover {
+            background: #dc2626;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="header__title">ReallyGoodJob Admin</h1>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span id="adminEmail" class="text-secondary"></span>
+                <div style="display: flex; gap: 1rem;">
+                    <a href="/dashboard" class="btn" style="background: #6b7280; color: white; text-decoration: none;">Dashboard</a>
+                    <button id="logoutBtn" class="btn" style="background: #ef4444; color: white;">Logout</button>
+                </div>
+            </div>
+        </header>
+
+        <main class="admin">
+            <div class="admin-header">
+                <h2>🛡️ Admin Control Panel</h2>
+                <p>Manage campaigns, approve submissions, and monitor system stats</p>
+            </div>
+
+            <div class="admin-nav">
+                <button class="nav-tab active" data-section="overview">📊 Overview</button>
+                <button class="nav-tab" data-section="campaigns">📋 All Campaigns</button>
+                <button class="nav-tab" data-section="pending">⏳ Pending Approval</button>
+            </div>
+
+            <!-- Overview Section -->
+            <div id="overview" class="admin-section active">
+                <h3>System Overview</h3>
+                <div class="stats-grid" id="statsGrid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalCampaigns">-</div>
+                        <div class="stat-label">Total Campaigns</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="pendingCampaigns">-</div>
+                        <div class="stat-label">Pending Approval</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="activeCampaigns">-</div>
+                        <div class="stat-label">Active Campaigns</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalUsers">-</div>
+                        <div class="stat-label">Total Users</div>
+                    </div>
+                </div>
+                <p style="color: #6b7280;">Select a tab above to manage specific areas of the system.</p>
+            </div>
+
+            <!-- All Campaigns Section -->
+            <div id="campaigns" class="admin-section">
+                <h3>All Campaigns</h3>
+                <div class="campaigns-grid" id="allCampaignsGrid">
+                    <p style="color: #6b7280;">Loading campaigns...</p>
+                </div>
+            </div>
+
+            <!-- Pending Campaigns Section -->
+            <div id="pending" class="admin-section">
+                <h3>Pending Approval</h3>
+                <div class="campaigns-grid" id="pendingCampaignsGrid">
+                    <p style="color: #6b7280;">Loading pending campaigns...</p>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2024 ReallyGoodJob. Admin Panel</p>
+        </footer>
+    </div>
+
+    <!-- Edit Campaign Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <h3>Edit Campaign</h3>
+            <form id="editForm">
+                <input type="hidden" id="editCampaignId">
+                
+                <div class="form-group">
+                    <label class="form-label" for="editName">Campaign Name</label>
+                    <input type="text" id="editName" class="form-input" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="editDescription">Description</label>
+                    <textarea id="editDescription" class="form-input form-textarea" required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="editExpiration">Expiration Date</label>
+                    <input type="datetime-local" id="editExpiration" class="form-input" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Recipients</label>
+                    <div id="recipientsList" style="max-height: 200px; overflow-y: auto; border: 1px solid #d1d5db; border-radius: 4px; padding: 1rem;">
+                        <p style="color: #6b7280;">Loading recipients...</p>
+                    </div>
+                    <div style="margin-top: 0.5rem; display: flex; gap: 0.5rem;">
+                        <input type="email" id="newRecipientEmail" class="form-input" placeholder="Enter email address" style="flex: 1;">
+                        <input type="text" id="newRecipientName" class="form-input" placeholder="Display name (optional)" style="flex: 1;">
+                        <button type="button" id="addRecipient" class="btn" style="background: #10b981; color: white; white-space: nowrap;">Add</button>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
+                    <button type="button" id="cancelEdit" class="btn" style="background: #6b7280; color: white;">Cancel</button>
+                    <button type="submit" class="btn btn--primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Get JWT token
+        const token = localStorage.getItem('authToken');
+        
+        if (!token) {
+            window.location.href = '/?error=authentication_required';
+        }
+
+        // State
+        let currentSection = 'overview';
+        let allCampaigns = [];
+        let pendingCampaigns = [];
+
+        // Navigation
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const section = tab.dataset.section;
+                switchSection(section);
+            });
+        });
+
+        function switchSection(section) {
+            // Update nav
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.section === section);
+            });
+            
+            // Update sections
+            document.querySelectorAll('.admin-section').forEach(sec => {
+                sec.classList.toggle('active', sec.id === section);
+            });
+            
+            currentSection = section;
+            
+            // Load data for section
+            if (section === 'campaigns') {
+                loadAllCampaigns();
+            } else if (section === 'pending') {
+                loadPendingCampaigns();
+            } else if (section === 'overview') {
+                loadStats();
+            }
+        }
+
+        // Load admin stats
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/admin/stats', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (!response.ok) throw new Error('Failed to load stats');
+                
+                const data = await response.json();
+                const stats = data.stats;
+                
+                document.getElementById('totalCampaigns').textContent = stats.campaigns.total;
+                document.getElementById('pendingCampaigns').textContent = stats.campaigns.pending;
+                document.getElementById('activeCampaigns').textContent = stats.campaigns.active;
+                document.getElementById('totalUsers').textContent = stats.users.total;
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        // Load all campaigns
+        async function loadAllCampaigns() {
+            try {
+                const response = await fetch('/api/admin/campaigns', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (!response.ok) throw new Error('Failed to load campaigns');
+                
+                const data = await response.json();
+                allCampaigns = data.campaigns;
+                renderCampaigns(allCampaigns, 'allCampaignsGrid', true);
+            } catch (error) {
+                console.error('Error loading campaigns:', error);
+                document.getElementById('allCampaignsGrid').innerHTML = '<p style="color: #ef4444;">Error loading campaigns</p>';
+            }
+        }
+
+        // Load pending campaigns
+        async function loadPendingCampaigns() {
+            try {
+                const response = await fetch('/api/admin/campaigns/pending', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (!response.ok) throw new Error('Failed to load pending campaigns');
+                
+                const data = await response.json();
+                pendingCampaigns = data.campaigns;
+                renderCampaigns(pendingCampaigns, 'pendingCampaignsGrid', false);
+            } catch (error) {
+                console.error('Error loading pending campaigns:', error);
+                document.getElementById('pendingCampaignsGrid').innerHTML = '<p style="color: #ef4444;">Error loading pending campaigns</p>';
+            }
+        }
+
+        // Render campaigns
+        function renderCampaigns(campaigns, containerId, showEdit) {
+            const container = document.getElementById(containerId);
+            
+            if (campaigns.length === 0) {
+                container.innerHTML = '<p style="color: #6b7280;">No campaigns found</p>';
+                return;
+            }
+            
+            container.innerHTML = campaigns.map(campaign => `
+                <div class="campaign-card">
+                    <div class="campaign-header">
+                        <div class="campaign-info">
+                            <h4>${campaign.name}</h4>
+                            <p style="color: #6b7280; margin: 0.5rem 0;">${campaign.description}</p>
+                            <div style="display: flex; gap: 1rem; align-items: center; margin-top: 1rem;">
+                                <span class="status-badge status-${campaign.status.toLowerCase()}">${campaign.status}</span>
+                                <span style="color: #6b7280;">📧 ${campaign.recipientCount} recipients</span>
+                                <span style="color: #6b7280;">👤 ${campaign.createdBy.name}</span>
+                            </div>
+                            <div style="color: #9ca3af; font-size: 0.875rem; margin-top: 0.5rem;">
+                                Created: ${new Date(campaign.createdAt).toLocaleDateString()}
+                                ${campaign.approvedAt ? `• Approved: ${new Date(campaign.approvedAt).toLocaleDateString()}` : ''}
+                                • Expires: ${new Date(campaign.expirationAt).toLocaleDateString()}
+                            </div>
+                        </div>
+                        <div class="campaign-actions">
+                            ${showEdit ? `<button class="btn-small btn-edit" data-action="edit" data-campaign-id="${campaign.id}">Edit</button>` : ''}
+                            ${campaign.status === 'Pending' ? `
+                                <button class="btn-small btn-approve" data-action="approve" data-campaign-id="${campaign.id}">Approve</button>
+                                <button class="btn-small btn-reject" data-action="reject" data-campaign-id="${campaign.id}">Reject</button>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // State for recipients
+        let currentRecipients = [];
+
+        // Edit campaign
+        async function editCampaign(campaignId) {
+            const campaign = allCampaigns.find(c => c.id === campaignId);
+            if (!campaign) return;
+            
+            document.getElementById('editCampaignId').value = campaign.id;
+            document.getElementById('editName').value = campaign.name;
+            document.getElementById('editDescription').value = campaign.description;
+            document.getElementById('editExpiration').value = new Date(campaign.expirationAt).toISOString().slice(0, 16);
+            
+            // Load recipients for this campaign
+            await loadCampaignRecipients(campaignId);
+            
+            document.getElementById('editModal').classList.add('active');
+        }
+
+        // Load campaign recipients
+        async function loadCampaignRecipients(campaignId) {
+            try {
+                const response = await fetch(`/api/admin/campaigns/${campaignId}/recipients`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (!response.ok) throw new Error('Failed to load recipients');
+                
+                const data = await response.json();
+                currentRecipients = data.recipients || [];
+                renderRecipients();
+            } catch (error) {
+                console.error('Error loading recipients:', error);
+                document.getElementById('recipientsList').innerHTML = '<p style="color: #ef4444;">Error loading recipients</p>';
+            }
+        }
+
+        // Render recipients list
+        function renderRecipients() {
+            const container = document.getElementById('recipientsList');
+            
+            if (currentRecipients.length === 0) {
+                container.innerHTML = '<p style="color: #6b7280;">No recipients added yet.</p>';
+                return;
+            }
+            
+            container.innerHTML = currentRecipients.map((recipient, index) => `
+                <div class="recipient-item" data-index="${index}">
+                    <div class="recipient-info">
+                        <div class="recipient-email">${recipient.email}</div>
+                        ${recipient.displayName ? `<div class="recipient-name">${recipient.displayName}</div>` : ''}
+                    </div>
+                    <button class="btn-remove" data-action="remove-recipient" data-index="${index}">Remove</button>
+                </div>
+            `).join('');
+        }
+
+        // Add recipient
+        function addRecipient() {
+            const email = document.getElementById('newRecipientEmail').value.trim();
+            const displayName = document.getElementById('newRecipientName').value.trim();
+            
+            if (!email) {
+                alert('Please enter an email address');
+                return;
+            }
+            
+            if (!email.includes('@')) {
+                alert('Please enter a valid email address');
+                return;
+            }
+            
+            // Check for duplicates
+            if (currentRecipients.some(r => r.email.toLowerCase() === email.toLowerCase())) {
+                alert('This email address is already in the recipients list');
+                return;
+            }
+            
+            currentRecipients.push({
+                email: email,
+                displayName: displayName || null,
+                isNew: true
+            });
+            
+            // Clear inputs
+            document.getElementById('newRecipientEmail').value = '';
+            document.getElementById('newRecipientName').value = '';
+            
+            renderRecipients();
+        }
+
+        // Remove recipient
+        function removeRecipient(index) {
+            currentRecipients.splice(index, 1);
+            renderRecipients();
+        }
+
+        // Approve campaign
+        async function approveCampaign(campaignId) {
+            if (!confirm('Are you sure you want to approve this campaign?')) return;
+            
+            try {
+                const response = await fetch(`/api/admin/campaigns/${campaignId}/approve`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (!response.ok) throw new Error('Failed to approve campaign');
+                
+                alert('Campaign approved successfully!');
+                
+                // Refresh current view
+                if (currentSection === 'campaigns') loadAllCampaigns();
+                if (currentSection === 'pending') loadPendingCampaigns();
+                loadStats();
+            } catch (error) {
+                console.error('Error approving campaign:', error);
+                alert('Failed to approve campaign');
+            }
+        }
+
+        // Reject campaign
+        async function rejectCampaign(campaignId) {
+            const reason = prompt('Reason for rejection (optional):');
+            if (reason === null) return; // User cancelled
+            
+            try {
+                const response = await fetch(`/api/admin/campaigns/${campaignId}/reject`, {
+                    method: 'POST',
+                    headers: { 
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ reason })
+                });
+                
+                if (!response.ok) throw new Error('Failed to reject campaign');
+                
+                alert('Campaign rejected successfully!');
+                
+                // Refresh current view
+                if (currentSection === 'campaigns') loadAllCampaigns();
+                if (currentSection === 'pending') loadPendingCampaigns();
+                loadStats();
+            } catch (error) {
+                console.error('Error rejecting campaign:', error);
+                alert('Failed to reject campaign');
+            }
+        }
+
+        // Modal controls
+        document.getElementById('cancelEdit').addEventListener('click', () => {
+            document.getElementById('editModal').classList.remove('active');
+        });
+
+        document.getElementById('editModal').addEventListener('click', (e) => {
+            if (e.target.id === 'editModal') {
+                document.getElementById('editModal').classList.remove('active');
+            }
+        });
+
+        // Edit form submission
+        document.getElementById('editForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const campaignId = document.getElementById('editCampaignId').value;
+            const name = document.getElementById('editName').value;
+            const description = document.getElementById('editDescription').value;
+            const expirationAt = document.getElementById('editExpiration').value;
+            
+            try {
+                // Update campaign details
+                const campaignResponse = await fetch(`/api/admin/campaigns/${campaignId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name, description, expirationAt })
+                });
+                
+                if (!campaignResponse.ok) throw new Error('Failed to update campaign');
+
+                // Update recipients
+                const recipientsResponse = await fetch(`/api/admin/campaigns/${campaignId}/recipients`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ recipients: currentRecipients })
+                });
+                
+                if (!recipientsResponse.ok) throw new Error('Failed to update recipients');
+                
+                alert('Campaign and recipients updated successfully!');
+                document.getElementById('editModal').classList.remove('active');
+                
+                // Refresh current view
+                if (currentSection === 'campaigns') loadAllCampaigns();
+                if (currentSection === 'pending') loadPendingCampaigns();
+            } catch (error) {
+                console.error('Error updating campaign:', error);
+                alert('Failed to update campaign: ' + error.message);
+            }
+        });
+
+        // Load user info
+        async function loadUserInfo() {
+            try {
+                const response = await fetch('/auth/me', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (!response.ok) throw new Error('Failed to load user info');
+                
+                const user = await response.json();
+                
+                if (!user.isAdmin) {
+                    alert('Admin access required');
+                    window.location.href = '/dashboard';
+                    return;
+                }
+                
+                document.getElementById('adminEmail').textContent = user.email;
+            } catch (error) {
+                console.error('Error loading user info:', error);
+                window.location.href = '/?error=session_expired';
+            }
+        }
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            try {
+                await fetch('/auth/logout', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+            } catch (error) {
+                console.error('Logout error:', error);
+            } finally {
+                localStorage.removeItem('authToken');
+                window.location.href = '/';
+            }
+        });
+
+        // Event delegation for campaign action buttons
+        document.addEventListener('click', (e) => {
+            const target = e.target;
+            if (target.matches('[data-action]')) {
+                const action = target.dataset.action;
+                const campaignId = target.dataset.campaignId;
+                const index = target.dataset.index;
+                
+                switch (action) {
+                    case 'edit':
+                        editCampaign(campaignId);
+                        break;
+                    case 'approve':
+                        approveCampaign(campaignId);
+                        break;
+                    case 'reject':
+                        rejectCampaign(campaignId);
+                        break;
+                    case 'remove-recipient':
+                        removeRecipient(parseInt(index));
+                        break;
+                }
+            }
+        });
+
+        // Add recipient button
+        document.getElementById('addRecipient').addEventListener('click', addRecipient);
+
+        // Allow Enter key to add recipient
+        document.getElementById('newRecipientEmail').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addRecipient();
+            }
+        });
+
+        // Initialize
+        loadUserInfo();
+        loadStats();
+    </script>
+</body>
+</html> 

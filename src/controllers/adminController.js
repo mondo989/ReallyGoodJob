@@ -17,8 +17,7 @@ class AdminController {
             attributes: ['id', 'email', 'name']
           },
           {
-            model: Recipient,
-            as: 'recipients'
+            model: Recipient
           }
         ],
         order: [['createdAt', 'DESC']]
@@ -32,7 +31,7 @@ class AdminController {
           description: campaign.description,
           status: campaign.status,
           createdBy: campaign.creator,
-          recipientCount: campaign.recipients.length,
+          recipientCount: campaign.Recipients.length,
           createdAt: campaign.createdAt,
           expirationAt: campaign.expirationAt
         }))
@@ -140,6 +139,178 @@ class AdminController {
       console.error('Error rejecting campaign:', error);
       res.status(500).json({
         error: 'Failed to reject campaign'
+      });
+    }
+  }
+
+  /**
+   * Update campaign information
+   * PUT /admin/campaigns/:id
+   */
+  async updateCampaign(req, res) {
+    try {
+      const { id } = req.params;
+      const { name, description, expirationAt } = req.body;
+      const adminUser = req.user;
+
+      const campaign = await Campaign.findByPk(id);
+      if (!campaign) {
+        return res.status(404).json({
+          error: 'Campaign not found'
+        });
+      }
+
+      // Update campaign fields
+      const updates = {};
+      if (name !== undefined) updates.name = name.trim();
+      if (description !== undefined) updates.description = description.trim();
+      if (expirationAt !== undefined) updates.expirationAt = new Date(expirationAt);
+
+      await campaign.update(updates);
+
+      console.log(`✏️ Campaign "${campaign.name}" updated by admin ${adminUser.email}`);
+
+      res.json({
+        success: true,
+        message: 'Campaign updated successfully',
+        campaign: {
+          id: campaign.id,
+          name: campaign.name,
+          description: campaign.description,
+          status: campaign.status,
+          expirationAt: campaign.expirationAt
+        }
+      });
+    } catch (error) {
+      console.error('Error updating campaign:', error);
+      res.status(500).json({
+        error: 'Failed to update campaign'
+      });
+    }
+  }
+
+  /**
+   * Get all campaigns (all statuses) for admin management
+   * GET /admin/campaigns
+   */
+  async getAllCampaigns(req, res) {
+    try {
+      const campaigns = await Campaign.findAll({
+        include: [
+          {
+            model: User,
+            as: 'creator',
+            attributes: ['id', 'email', 'name']
+          },
+          {
+            model: Recipient
+          }
+        ],
+        order: [['createdAt', 'DESC']]
+      });
+
+      res.json({
+        success: true,
+        campaigns: campaigns.map(campaign => ({
+          id: campaign.id,
+          name: campaign.name,
+          description: campaign.description,
+          status: campaign.status,
+          createdBy: campaign.creator,
+          recipientCount: campaign.Recipients.length,
+          createdAt: campaign.createdAt,
+          approvedAt: campaign.approvedAt,
+          expirationAt: campaign.expirationAt
+        }))
+      });
+    } catch (error) {
+      console.error('Error fetching all campaigns:', error);
+      res.status(500).json({
+        error: 'Failed to fetch campaigns'
+      });
+    }
+  }
+
+  /**
+   * Get campaign recipients
+   * GET /admin/campaigns/:id/recipients
+   */
+  async getCampaignRecipients(req, res) {
+    try {
+      const { id } = req.params;
+
+      const campaign = await Campaign.findByPk(id, {
+        include: [
+          {
+            model: Recipient,
+            attributes: ['id', 'email', 'displayName', 'personalizedName']
+          }
+        ]
+      });
+
+      if (!campaign) {
+        return res.status(404).json({
+          error: 'Campaign not found'
+        });
+      }
+
+      res.json({
+        success: true,
+        recipients: campaign.Recipients || []
+      });
+    } catch (error) {
+      console.error('Error fetching campaign recipients:', error);
+      res.status(500).json({
+        error: 'Failed to fetch campaign recipients'
+      });
+    }
+  }
+
+  /**
+   * Update campaign recipients
+   * PUT /admin/campaigns/:id/recipients
+   */
+  async updateCampaignRecipients(req, res) {
+    try {
+      const { id } = req.params;
+      const { recipients } = req.body;
+      const adminUser = req.user;
+
+      const campaign = await Campaign.findByPk(id);
+      if (!campaign) {
+        return res.status(404).json({
+          error: 'Campaign not found'
+        });
+      }
+
+      // Remove all existing recipients for this campaign
+      await Recipient.destroy({
+        where: { campaignId: id }
+      });
+
+      // Add new recipients
+      if (recipients && recipients.length > 0) {
+        const recipientData = recipients.map(recipient => ({
+          campaignId: id,
+          email: recipient.email,
+          displayName: recipient.displayName || recipient.email.split('@')[0],
+          personalizedName: recipient.displayName || recipient.email.split('@')[0]
+        }));
+
+        await Recipient.bulkCreate(recipientData);
+      }
+
+      console.log(`✏️ Campaign "${campaign.name}" recipients updated by admin ${adminUser.email}`);
+
+      res.json({
+        success: true,
+        message: 'Recipients updated successfully',
+        recipientCount: recipients ? recipients.length : 0
+      });
+    } catch (error) {
+      console.error('Error updating campaign recipients:', error);
+      res.status(500).json({
+        error: 'Failed to update campaign recipients'
       });
     }
   }
