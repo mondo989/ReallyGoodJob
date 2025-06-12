@@ -1,0 +1,195 @@
+// Dark Mode Mixin
+@mixin dark-mode {
+  [data-theme="dark"] & {
+    @content;
+  }
+}
+
+// Light Mode Mixin (for explicit light mode styles)
+@mixin light-mode {
+  [data-theme="light"] & {
+    @content;
+  }
+}
+
+// Theme-aware property mixin
+@mixin theme-property($property, $light-value, $dark-value) {
+  #{$property}: #{$light-value};
+  
+  @include dark-mode {
+    #{$property}: #{$dark-value};
+  }
+}
+
+// Responsive breakpoints
+@mixin mobile {
+  @media (max-width: #{$breakpoint-sm - 1px}) {
+    @content;
+  }
+}
+
+@mixin tablet {
+  @media (min-width: #{$breakpoint-sm}) and (max-width: #{$breakpoint-lg - 1px}) {
+    @content;
+  }
+}
+
+@mixin desktop {
+  @media (min-width: #{$breakpoint-lg}) {
+    @content;
+  }
+}
+
+@mixin min-width($width) {
+  @media (min-width: #{$width}) {
+    @content;
+  }
+}
+
+@mixin max-width($width) {
+  @media (max-width: #{$width - 1px}) {
+    @content;
+  }
+}
+
+// Button variants
+@mixin button-base {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-sm $spacing-lg;
+  border: none;
+  border-radius: $border-radius;
+  font-size: $font-size-base;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all $transition-base;
+  font-family: inherit;
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+@mixin button-primary {
+  @include button-base;
+  @include theme-property(background-color, $light-primary, $dark-primary);
+  @include theme-property(color, white, white);
+  
+  &:hover:not(:disabled) {
+    @include theme-property(background-color, $light-primary-hover, $dark-primary-hover);
+    transform: translateY(-1px);
+    @include theme-property(box-shadow, $light-shadow, $dark-shadow);
+  }
+}
+
+@mixin button-secondary {
+  @include button-base;
+  @include theme-property(background-color, transparent, transparent);
+  @include theme-property(color, $light-text-primary, $dark-text-primary);
+  @include theme-property(border, 1px solid $light-border, 1px solid $dark-border);
+  
+  &:hover:not(:disabled) {
+    @include theme-property(background-color, $light-bg-secondary, $dark-bg-secondary);
+  }
+}
+
+// Card component
+@mixin card {
+  @include theme-property(background-color, $light-bg-card, $dark-bg-card);
+  @include theme-property(border, 1px solid $light-border, 1px solid $dark-border);
+  border-radius: $border-radius;
+  @include theme-property(box-shadow, $light-shadow, $dark-shadow);
+  padding: $spacing-lg;
+  transition: all $transition-base;
+  
+  &:hover {
+    @include theme-property(box-shadow, $light-shadow-lg, $dark-shadow-lg);
+  }
+}
+
+// Form elements
+@mixin form-input {
+  width: 100%;
+  padding: $spacing-sm $spacing-md;
+  @include theme-property(border, 1px solid $light-border, 1px solid $dark-border);
+  border-radius: $border-radius-sm;
+  font-size: $font-size-base;
+  @include theme-property(background-color, $light-bg-primary, $dark-bg-secondary);
+  @include theme-property(color, $light-text-primary, $dark-text-primary);
+  transition: all $transition-base;
+  
+  &:focus {
+    outline: none;
+    @include theme-property(border-color, $light-primary, $dark-primary);
+    @include theme-property(box-shadow, 0 0 0 3px rgba(79, 70, 229, 0.1), 0 0 0 3px rgba(99, 102, 241, 0.1));
+  }
+  
+  &::placeholder {
+    @include theme-property(color, $light-text-muted, $dark-text-muted);
+  }
+}
+
+// Status badges
+@mixin status-badge($bg-light, $text-light, $bg-dark, $text-dark) {
+  display: inline-block;
+  padding: $spacing-xs $spacing-sm;
+  border-radius: 9999px;
+  font-size: $font-size-sm;
+  font-weight: 500;
+  @include theme-property(background-color, $bg-light, $bg-dark);
+  @include theme-property(color, $text-light, $text-dark);
+}
+
+// Flexbox utilities
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+// Text utilities
+@mixin text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@mixin text-clamp($lines: 2) {
+  display: -webkit-box;
+  -webkit-line-clamp: $lines;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+// Animation utilities
+@mixin fade-in($duration: $transition-base) {
+  animation: fadeIn $duration ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Focus styles
+@mixin focus-ring {
+  &:focus {
+    outline: none;
+    @include theme-property(box-shadow, 0 0 0 3px rgba(79, 70, 229, 0.1), 0 0 0 3px rgba(99, 102, 241, 0.2));
+  }
+} 

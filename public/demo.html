@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dark Mode Demo - ReallyGoodJob</title>
+    <link rel="stylesheet" href="/css/main.css">
+    <script src="/js/theme.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="header__title">🌙 Dark Mode Demo</h1>
+            <p class="header__subtitle">Experience ReallyGoodJob's beautiful dark mode</p>
+            <div class="header__controls">
+                <button 
+                    data-theme-toggle 
+                    class="theme-toggle" 
+                    aria-label="Toggle dark mode"
+                    title="Toggle dark mode"
+                >
+                    <span class="theme-toggle__icon theme-toggle__sun">☀️</span>
+                    <span class="theme-toggle__icon theme-toggle__moon">🌙</span>
+                </button>
+                <a href="/" class="btn btn--secondary">← Back to Home</a>
+            </div>
+        </header>
+
+        <main class="main">
+            <!-- Alert Examples -->
+            <section style="margin-bottom: 2rem;">
+                <h2 class="text-primary mb-3">Alert Components</h2>
+                <div class="alert alert--success">
+                    <span>✅</span>
+                    <span>Campaign successfully created and approved!</span>
+                </div>
+                <div class="alert alert--warning">
+                    <span>⚠️</span>
+                    <span>Your campaign is pending admin approval.</span>
+                </div>
+                <div class="alert alert--error">
+                    <span>❌</span>
+                    <span>Failed to send email. Please check your Gmail connection.</span>
+                </div>
+                <div class="alert alert--info">
+                    <span>ℹ️</span>
+                    <span>You have 3 remaining sends this month on the free tier.</span>
+                </div>
+            </section>
+
+            <!-- Button Examples -->
+            <section style="margin-bottom: 2rem;">
+                <h2 class="text-primary mb-3">Button Variants</h2>
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
+                    <button class="btn">Primary Button</button>
+                    <button class="btn btn--secondary">Secondary Button</button>
+                    <button class="btn btn--success">Success Button</button>
+                    <button class="btn btn--warning">Warning Button</button>
+                    <button class="btn btn--error">Error Button</button>
+                </div>
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <button class="btn btn--small">Small Button</button>
+                    <button class="btn">Regular Button</button>
+                    <button class="btn btn--large">Large Button</button>
+                    <button class="btn" disabled>Disabled Button</button>
+                </div>
+            </section>
+
+            <!-- Status Badges -->
+            <section style="margin-bottom: 2rem;">
+                <h2 class="text-primary mb-3">Status Badges</h2>
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <span class="status-badge status-badge--success">Active</span>
+                    <span class="status-badge status-badge--pending">Pending</span>
+                    <span class="status-badge status-badge--error">Rejected</span>
+                    <span class="status-badge status-badge--info">Draft</span>
+                </div>
+            </section>
+
+            <!-- Cards -->
+            <section style="margin-bottom: 2rem;">
+                <h2 class="text-primary mb-3">Card Components</h2>
+                <div class="dashboard-grid">
+                    <div class="card">
+                        <h3 class="card__title">📧 Gmail Connection</h3>
+                        <div class="card__content">
+                            <span class="status-badge status-badge--success">✅ Connected</span>
+                            <p style="margin-top: 0.5rem;">Ready to send appreciation emails</p>
+                        </div>
+                        <div class="card__actions">
+                            <button class="btn btn--small">Reconnect</button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="card__title">🎯 Active Campaigns</h3>
+                        <div class="card__content">
+                            <div style="font-size: 2rem; font-weight: bold; color: var(--primary-color);">12</div>
+                            <p>Campaigns ready to send</p>
+                        </div>
+                        <div class="card__actions">
+                            <button class="btn btn--small">View All</button>
+                            <button class="btn btn--small btn--secondary">Schedule</button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="card__title">📊 This Month</h3>
+                        <div class="card__content">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span>Emails Sent:</span>
+                                <strong>47</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span>Emails Opened:</span>
+                                <strong>32</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>Open Rate:</span>
+                                <strong class="text-success">68%</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Form Example -->
+            <section style="margin-bottom: 2rem;">
+                <h2 class="text-primary mb-3">Form Components</h2>
+                <div class="card" style="max-width: 500px;">
+                    <h3 class="card__title">📝 Schedule Campaign</h3>
+                    <form>
+                        <div class="form-group">
+                            <label for="campaign">Select Campaign</label>
+                            <select id="campaign">
+                                <option>Thank Local Coffee Shops</option>
+                                <option>Appreciate Healthcare Workers</option>
+                                <option>Support Small Businesses</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="note">Personal Note (Optional)</label>
+                            <textarea id="note" placeholder="Add a personal touch to your message..."></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Delivery Window</label>
+                            <div class="schedule-options">
+                                <label class="radio-option">
+                                    <input type="radio" name="window" value="morning" checked>
+                                    <span>🌅 Morning (8:00 AM - 12:00 PM)</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="window" value="afternoon">
+                                    <span>☀️ Afternoon (12:00 PM - 5:00 PM)</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="window" value="evening">
+                                    <span>🌆 Evening (5:00 PM - 9:00 PM)</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                            <button type="button" class="btn btn--secondary">Cancel</button>
+                            <button type="submit" class="btn">Schedule Send</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Table Example -->
+            <section style="margin-bottom: 2rem;">
+                <h2 class="text-primary mb-3">Table Component</h2>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Campaign</th>
+                            <th>Status</th>
+                            <th>Recipients</th>
+                            <th>Sent</th>
+                            <th>Opened</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Thank Local Coffee Shops</td>
+                            <td><span class="status-badge status-badge--success">Active</span></td>
+                            <td>24</td>
+                            <td>18</td>
+                            <td>12</td>
+                            <td>
+                                <button class="btn btn--small">View</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Appreciate Healthcare Workers</td>
+                            <td><span class="status-badge status-badge--pending">Pending</span></td>
+                            <td>156</td>
+                            <td>0</td>
+                            <td>0</td>
+                            <td>
+                                <button class="btn btn--small btn--secondary">Edit</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Support Small Businesses</td>
+                            <td><span class="status-badge status-badge--success">Active</span></td>
+                            <td>89</td>
+                            <td>67</td>
+                            <td>45</td>
+                            <td>
+                                <button class="btn btn--small">View</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Loading Example -->
+            <section style="margin-bottom: 2rem;">
+                <h2 class="text-primary mb-3">Loading Component</h2>
+                <div class="card">
+                    <div class="loading">
+                        <div class="loading__spinner"></div>
+                        <span class="loading__text">Loading campaigns...</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Admin Stats Example -->
+            <section style="margin-bottom: 2rem;">
+                <h2 class="text-primary mb-3">Admin Stats</h2>
+                <div class="admin-stats">
+                    <div class="admin-stats__card">
+                        <span class="admin-stats__card__number">247</span>
+                        <div class="admin-stats__card__label">Total Campaigns</div>
+                    </div>
+                    <div class="admin-stats__card">
+                        <span class="admin-stats__card__number">12</span>
+                        <div class="admin-stats__card__label">Pending Approval</div>
+                    </div>
+                    <div class="admin-stats__card">
+                        <span class="admin-stats__card__number">1,543</span>
+                        <div class="admin-stats__card__label">Emails Sent</div>
+                    </div>
+                    <div class="admin-stats__card">
+                        <span class="admin-stats__card__number">89</span>
+                        <div class="admin-stats__card__label">Active Users</div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <div class="footer__content">
+                <span>&copy; 2024 ReallyGoodJob</span>
+                <span>•</span>
+                <a href="#" class="footer__link">Privacy</a>
+                <span>•</span>
+                <a href="#" class="footer__link">Terms</a>
+                <span>•</span>
+                <span>Dark mode demo</span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Modal Example (hidden by default) -->
+    <div id="demoModal" class="modal">
+        <div class="modal__content">
+            <div class="modal__header">
+                <h3>Campaign Details</h3>
+                <span class="close" onclick="document.getElementById('demoModal').classList.remove('active')">&times;</span>
+            </div>
+            <div class="modal__body">
+                <p>This is a demo modal showing how modals look in both light and dark modes.</p>
+                <div class="form-group">
+                    <label>Campaign Name</label>
+                    <input type="text" value="Thank Local Coffee Shops" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea readonly>A campaign to show appreciation for local coffee shop owners and baristas who create community gathering spaces.</textarea>
+                </div>
+            </div>
+            <div class="modal__actions">
+                <button class="btn btn--secondary" onclick="document.getElementById('demoModal').classList.remove('active')">Close</button>
+                <button class="btn">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Add some interactivity to the demo
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add click handler to show modal
+            const viewButtons = document.querySelectorAll('.btn:not([disabled])');
+            viewButtons.forEach(btn => {
+                if (btn.textContent.trim() === 'View') {
+                    btn.addEventListener('click', () => {
+                        document.getElementById('demoModal').classList.add('active');
+                    });
+                }
+            });
+
+            // Listen for theme changes
+            document.addEventListener('themechange', function(e) {
+                console.log('Theme changed to:', e.detail.theme);
+                
+                // You could add custom logic here for theme-specific behavior
+                if (e.detail.isDark) {
+                    console.log('Dark mode activated! 🌙');
+                } else {
+                    console.log('Light mode activated! ☀️');
+                }
+            });
+
+            // Add some demo notifications
+            setTimeout(() => {
+                console.log('💡 Tip: Try toggling between light and dark modes using the button in the header!');
+            }, 2000);
+        });
+    </script>
+</body>
+</html> 

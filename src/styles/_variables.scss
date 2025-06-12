@@ -1,0 +1,92 @@
+// Light Mode Colors
+$light-primary: #4f46e5;
+$light-primary-hover: #4338ca;
+$light-secondary: #10b981;
+$light-accent: #f59e0b;
+$light-success: #10b981;
+$light-warning: #f59e0b;
+$light-error: #ef4444;
+
+// Light Mode Text
+$light-text-primary: #1f2937;
+$light-text-secondary: #6b7280;
+$light-text-muted: #9ca3af;
+
+// Light Mode Backgrounds
+$light-bg-primary: #ffffff;
+$light-bg-secondary: #f9fafb;
+$light-bg-tertiary: #f3f4f6;
+$light-bg-card: #ffffff;
+
+// Light Mode Borders & Shadows
+$light-border: #e5e7eb;
+$light-border-light: #f3f4f6;
+$light-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+$light-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+
+// Dark Mode Colors
+$dark-primary: #6366f1;
+$dark-primary-hover: #5b21b6;
+$dark-secondary: #34d399;
+$dark-accent: #fbbf24;
+$dark-success: #34d399;
+$dark-warning: #fbbf24;
+$dark-error: #f87171;
+
+// Dark Mode Text
+$dark-text-primary: #f9fafb;
+$dark-text-secondary: #d1d5db;
+$dark-text-muted: #9ca3af;
+
+// Dark Mode Backgrounds
+$dark-bg-primary: #111827;
+$dark-bg-secondary: #1f2937;
+$dark-bg-tertiary: #374151;
+$dark-bg-card: #1f2937;
+
+// Dark Mode Borders & Shadows
+$dark-border: #374151;
+$dark-border-light: #4b5563;
+$dark-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+$dark-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+
+// Design Tokens
+$border-radius: 8px;
+$border-radius-sm: 4px;
+$border-radius-lg: 12px;
+$border-radius-xl: 16px;
+
+// Spacing
+$spacing-xs: 0.25rem;
+$spacing-sm: 0.5rem;
+$spacing-md: 1rem;
+$spacing-lg: 1.5rem;
+$spacing-xl: 2rem;
+$spacing-2xl: 3rem;
+
+// Typography
+$font-family-base: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+$font-size-xs: 0.75rem;
+$font-size-sm: 0.875rem;
+$font-size-base: 1rem;
+$font-size-lg: 1.125rem;
+$font-size-xl: 1.25rem;
+$font-size-2xl: 1.5rem;
+$font-size-3xl: 2rem;
+$font-size-4xl: 2.5rem;
+
+// Transitions
+$transition-fast: 0.15s ease;
+$transition-base: 0.2s ease;
+$transition-slow: 0.3s ease;
+
+// Z-index
+$z-dropdown: 1000;
+$z-modal: 1050;
+$z-tooltip: 1100;
+
+// Breakpoints
+$breakpoint-sm: 640px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 1024px;
+$breakpoint-xl: 1280px; 

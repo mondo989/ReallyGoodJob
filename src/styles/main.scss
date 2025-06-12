@@ -1,14 +1,7 @@
-// Variables
-$primary-color: #4f46e5;
-$primary-hover: #4338ca;
-$secondary-color: #10b981;
-$text-primary: #1f2937;
-$text-secondary: #6b7280;
-$background: #ffffff;
-$background-secondary: #f9fafb;
-$border-color: #e5e7eb;
-$shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-$border-radius: 8px;
+// Import partials
+@import 'variables';
+@import 'mixins';
+@import 'components';
 
 // Base styles
 * {
@@ -17,38 +10,68 @@ $border-radius: 8px;
   box-sizing: border-box;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: $font-family-base;
   line-height: 1.6;
-  color: $text-primary;
-  background-color: $background;
+  @include theme-property(color, $light-text-primary, $dark-text-primary);
+  @include theme-property(background-color, $light-bg-primary, $dark-bg-primary);
+  transition: background-color $transition-base, color $transition-base;
+  min-height: 100vh;
 }
 
 // Container
 .container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 $spacing-md;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  
+  @include min-width($breakpoint-lg) {
+    padding: 0 $spacing-xl;
+  }
 }
 
 // Header
 .header {
   text-align: center;
-  padding: 2rem 0;
+  padding: $spacing-xl 0;
+  position: relative;
   
   &__title {
-    font-size: 2.5rem;
+    font-size: $font-size-4xl;
     font-weight: 700;
-    color: $primary-color;
-    margin-bottom: 0.5rem;
+    @include theme-property(color, $light-primary, $dark-primary);
+    margin-bottom: $spacing-sm;
+    
+    @include mobile {
+      font-size: $font-size-3xl;
+    }
   }
   
   &__subtitle {
-    font-size: 1.125rem;
-    color: $text-secondary;
+    font-size: $font-size-lg;
+    @include theme-property(color, $light-text-secondary, $dark-text-secondary);
+  }
+  
+  &__controls {
+    position: absolute;
+    top: $spacing-md;
+    right: 0;
+    display: flex;
+    align-items: center;
+    gap: $spacing-md;
+    
+    @include mobile {
+      position: static;
+      justify-content: center;
+      margin-top: $spacing-md;
+    }
   }
 }
 
@@ -57,121 +80,259 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 3rem;
+  gap: $spacing-2xl;
 }
 
 // Hero section
 .hero {
   text-align: center;
-  padding: 2rem 0;
+  padding: $spacing-xl 0;
   
   &__title {
-    font-size: 2rem;
+    font-size: $font-size-3xl;
     font-weight: 600;
-    margin-bottom: 1rem;
-    color: $text-primary;
+    margin-bottom: $spacing-md;
+    @include theme-property(color, $light-text-primary, $dark-text-primary);
+    
+    @include mobile {
+      font-size: $font-size-2xl;
+    }
   }
   
   &__description {
-    font-size: 1.125rem;
-    color: $text-secondary;
+    font-size: $font-size-lg;
+    @include theme-property(color, $light-text-secondary, $dark-text-secondary);
     max-width: 600px;
-    margin: 0 auto 2rem;
+    margin: 0 auto $spacing-xl;
+    line-height: 1.7;
   }
 }
 
 // Auth section
 .auth-section {
-  margin: 2rem 0;
-}
-
-// Buttons
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: $border-radius;
-  font-size: 1rem;
-  font-weight: 500;
-  text-decoration: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  
-  &--primary {
-    background-color: $primary-color;
-    color: white;
-    
-    &:hover {
-      background-color: $primary-hover;
-      transform: translateY(-1px);
-      box-shadow: $shadow;
-    }
-  }
-  
-  &__icon {
-    font-size: 1.25rem;
-  }
+  margin: $spacing-xl 0;
+  text-align: center;
 }
 
 // Features section
 .features {
-  padding: 2rem 0;
+  padding: $spacing-xl 0;
+  
+  &__title {
+    text-align: center;
+    font-size: $font-size-2xl;
+    font-weight: 600;
+    margin-bottom: $spacing-xl;
+    @include theme-property(color, $light-text-primary, $dark-text-primary);
+  }
   
   &__grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
-    margin-top: 2rem;
+    gap: $spacing-xl;
+    margin-top: $spacing-xl;
   }
 }
 
 // Feature cards
 .feature {
   text-align: center;
-  padding: 2rem;
-  background-color: $background-secondary;
-  border-radius: $border-radius;
-  border: 1px solid $border-color;
+  padding: $spacing-xl;
+  @include theme-property(background-color, $light-bg-secondary, $dark-bg-secondary);
+  @include theme-property(border, 1px solid $light-border, 1px solid $dark-border);
+  border-radius: $border-radius-lg;
+  transition: all $transition-base;
+  @include fade-in;
+  
+  &:hover {
+    transform: translateY(-4px);
+    @include theme-property(box-shadow, $light-shadow-lg, $dark-shadow-lg);
+  }
   
   &__icon {
     font-size: 3rem;
-    margin-bottom: 1rem;
+    margin-bottom: $spacing-md;
+    display: block;
   }
   
   &__title {
-    font-size: 1.25rem;
+    font-size: $font-size-xl;
     font-weight: 600;
-    margin-bottom: 0.5rem;
-    color: $text-primary;
+    margin-bottom: $spacing-sm;
+    @include theme-property(color, $light-text-primary, $dark-text-primary);
   }
   
   &__description {
-    color: $text-secondary;
+    @include theme-property(color, $light-text-secondary, $dark-text-secondary);
+    line-height: 1.6;
   }
 }
 
 // Footer
 .footer {
   text-align: center;
-  padding: 2rem 0;
-  border-top: 1px solid $border-color;
-  color: $text-secondary;
+  padding: $spacing-xl 0;
+  @include theme-property(border-top, 1px solid $light-border, 1px solid $dark-border);
+  @include theme-property(color, $light-text-secondary, $dark-text-secondary);
   margin-top: auto;
+  
+  &__content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: $spacing-md;
+    flex-wrap: wrap;
+  }
+  
+  &__link {
+    @include theme-property(color, $light-primary, $dark-primary);
+    text-decoration: none;
+    transition: opacity $transition-base;
+    
+    &:hover {
+      opacity: 0.8;
+    }
+  }
 }
 
-// Responsive design
-@media (max-width: 768px) {
-  .header__title {
-    font-size: 2rem;
+// Dashboard specific styles
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: $spacing-xl;
+  margin-top: $spacing-xl;
+}
+
+.dashboard-card {
+  @include card;
+  @include fade-in;
+  
+  &:hover {
+    transform: translateY(-2px);
+  }
+}
+
+// Admin specific styles
+.admin-header {
+  @include flex-between;
+  margin-bottom: $spacing-xl;
+  padding-bottom: $spacing-md;
+  @include theme-property(border-bottom, 1px solid $light-border, 1px solid $dark-border);
+  
+  &__title {
+    font-size: $font-size-2xl;
+    font-weight: 600;
+    @include theme-property(color, $light-text-primary, $dark-text-primary);
   }
   
-  .hero__title {
-    font-size: 1.75rem;
+  &__actions {
+    display: flex;
+    gap: $spacing-sm;
+    align-items: center;
+  }
+}
+
+.admin-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: $spacing-md;
+  margin-bottom: $spacing-xl;
+  
+  &__card {
+    @include card;
+    text-align: center;
+    padding: $spacing-md;
+    
+    &__number {
+      font-size: $font-size-2xl;
+      font-weight: 700;
+      @include theme-property(color, $light-primary, $dark-primary);
+      display: block;
+    }
+    
+    &__label {
+      font-size: $font-size-sm;
+      @include theme-property(color, $light-text-secondary, $dark-text-secondary);
+      margin-top: $spacing-xs;
+    }
+  }
+}
+
+// Utility classes
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+.text-right { text-align: right; }
+
+.mt-0 { margin-top: 0; }
+.mt-1 { margin-top: $spacing-xs; }
+.mt-2 { margin-top: $spacing-sm; }
+.mt-3 { margin-top: $spacing-md; }
+.mt-4 { margin-top: $spacing-lg; }
+.mt-5 { margin-top: $spacing-xl; }
+
+.mb-0 { margin-bottom: 0; }
+.mb-1 { margin-bottom: $spacing-xs; }
+.mb-2 { margin-bottom: $spacing-sm; }
+.mb-3 { margin-bottom: $spacing-md; }
+.mb-4 { margin-bottom: $spacing-lg; }
+.mb-5 { margin-bottom: $spacing-xl; }
+
+.p-0 { padding: 0; }
+.p-1 { padding: $spacing-xs; }
+.p-2 { padding: $spacing-sm; }
+.p-3 { padding: $spacing-md; }
+.p-4 { padding: $spacing-lg; }
+.p-5 { padding: $spacing-xl; }
+
+.d-flex { display: flex; }
+.d-block { display: block; }
+.d-inline { display: inline; }
+.d-none { display: none; }
+
+.flex-center { @include flex-center; }
+.flex-between { @include flex-between; }
+
+.w-full { width: 100%; }
+.h-full { height: 100%; }
+
+// Text colors
+.text-primary { @include theme-property(color, $light-text-primary, $dark-text-primary); }
+.text-secondary { @include theme-property(color, $light-text-secondary, $dark-text-secondary); }
+.text-muted { @include theme-property(color, $light-text-muted, $dark-text-muted); }
+.text-success { @include theme-property(color, $light-success, $dark-success); }
+.text-warning { @include theme-property(color, $light-warning, $dark-warning); }
+.text-error { @include theme-property(color, $light-error, $dark-error); }
+
+// Background colors
+.bg-primary { @include theme-property(background-color, $light-bg-primary, $dark-bg-primary); }
+.bg-secondary { @include theme-property(background-color, $light-bg-secondary, $dark-bg-secondary); }
+.bg-card { @include theme-property(background-color, $light-bg-card, $dark-bg-card); }
+
+// Responsive utilities
+@include mobile {
+  .mobile-hidden { display: none !important; }
+  .mobile-center { text-align: center !important; }
+}
+
+@include tablet {
+  .tablet-hidden { display: none !important; }
+}
+
+@include desktop {
+  .desktop-hidden { display: none !important; }
+}
+
+// Print styles
+@media print {
+  .no-print { display: none !important; }
+  
+  body {
+    background: white !important;
+    color: black !important;
   }
   
-  .features__grid {
-    grid-template-columns: 1fr;
+  .card, .dashboard-card {
+    box-shadow: none !important;
+    border: 1px solid #ccc !important;
   }
 } 

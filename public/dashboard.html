@@ -5,174 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - ReallyGoodJob</title>
     <link rel="stylesheet" href="/css/main.css">
-    <style>
-        .dashboard {
-            padding: 2rem 0;
-        }
-        .user-info {
-            background: #f9fafb;
-            padding: 1.5rem;
-            border-radius: 8px;
-            margin-bottom: 2rem;
-        }
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            margin-top: 2rem;
-        }
-        .dashboard-card {
-            background: white;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            padding: 1.5rem;
-        }
-        .card-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            color: #1f2937;
-        }
-        .status-badge {
-            display: inline-block;
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            font-size: 0.875rem;
-            font-weight: 500;
-        }
-        .status-success {
-            background: #d1fae5;
-            color: #065f46;
-        }
-        .status-pending {
-            background: #fef3c7;
-            color: #92400e;
-        }
-        
-        /* Modal Styles */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-        }
-        
-        .modal.active {
-            display: block;
-        }
-        
-        .modal-content {
-            background-color: #fff;
-            margin: 5% auto;
-            border-radius: 8px;
-            width: 90%;
-            max-width: 500px;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-        
-        .modal-header {
-            padding: 1.5rem;
-            border-bottom: 1px solid #e5e7eb;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .modal-header h3 {
-            margin: 0;
-            color: #1f2937;
-        }
-        
-        .close {
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: #6b7280;
-        }
-        
-        .close:hover {
-            color: #ef4444;
-        }
-        
-        .modal-body {
-            padding: 1.5rem;
-        }
-        
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-            color: #1f2937;
-        }
-        
-        .form-group select,
-        .form-group input[type="date"] {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid #d1d5db;
-            border-radius: 4px;
-            font-size: 1rem;
-        }
-        
-        .schedule-options {
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-        }
-        
-        .radio-option {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.75rem;
-            border: 1px solid #d1d5db;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .radio-option:hover {
-            background: #f9fafb;
-        }
-        
-        .radio-option input[type="radio"]:checked + span {
-            font-weight: 600;
-            color: #3b82f6;
-        }
-        
-        .modal-actions {
-            display: flex;
-            gap: 1rem;
-            justify-content: flex-end;
-            margin-top: 2rem;
-        }
-        
-        .btn-secondary {
-            background: #6b7280;
-            color: white;
-        }
-        
-        .btn-primary {
-            background: #3b82f6;
-            color: white;
-        }
-    </style>
+    <script src="/js/theme.js"></script>
+
 </head>
 <body>
     <div class="container">
         <header class="header">
             <h1 class="header__title">ReallyGoodJob Dashboard</h1>
-            <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div class="header__controls">
+                <button 
+                    data-theme-toggle 
+                    class="theme-toggle" 
+                    aria-label="Toggle dark mode"
+                    title="Toggle dark mode"
+                >
+                    <span class="theme-toggle__icon theme-toggle__sun">☀️</span>
+                    <span class="theme-toggle__icon theme-toggle__moon">🌙</span>
+                </button>
                 <span id="userEmail" class="text-secondary"></span>
-                <button id="logoutBtn" class="btn" style="background: #ef4444; color: white;">Logout</button>
+                <button id="logoutBtn" class="btn btn--error">Logout</button>
             </div>
         </header>
 
@@ -183,11 +34,11 @@
             </div>
 
             <div class="dashboard-grid">
-                <div class="dashboard-card">
-                    <h3 class="card-title">📧 Gmail Connection</h3>
+                <div class="card">
+                    <h3 class="card__title">📧 Gmail Connection</h3>
                     <div id="gmailStatus">
-                        <span class="status-badge status-success">✅ Connected</span>
-                        <p style="margin-top: 0.5rem; color: #6b7280;">Ready to send appreciation emails</p>
+                        <span class="status-badge status-badge--success">✅ Connected</span>
+                        <p class="text-secondary mt-2">Ready to send appreciation emails</p>
                     </div>
                 </div>
 
@@ -331,8 +182,8 @@
                 
                 if (user.isAdmin) {
                     document.getElementById('userInfo').innerHTML += `
-                        <p style="color: #10b981; font-weight: 600;">🛡️ Admin Access Enabled</p>
-                        <div style="margin-top: 1rem;">
+                        <p class="text-success" style="font-weight: 600;">🛡️ Admin Access Enabled</p>
+                        <div class="mt-3">
                             <a href="/admin" class="btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none;">🛡️ Admin Panel</a>
                         </div>
                     `;
@@ -380,19 +231,19 @@
                 const container = document.getElementById('activeCampaigns');
                 
                 if (activeCampaigns.length === 0) {
-                    container.innerHTML = '<p style="color: #6b7280;">No active campaigns yet. Check with admin for campaign approval.</p>';
+                    container.innerHTML = '<p class="text-secondary">No active campaigns yet. Check with admin for campaign approval.</p>';
                     return;
                 }
                 
                 container.innerHTML = activeCampaigns.map(campaign => `
-                    <div style="border: 1px solid #e5e7eb; border-radius: 4px; padding: 1rem; margin-bottom: 0.5rem;">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div class="card mb-2">
+                        <div class="flex justify-between items-center">
                             <div>
-                                <h4 style="margin: 0; color: #1f2937;">${campaign.name}</h4>
-                                <p style="margin: 0.25rem 0; color: #6b7280; font-size: 0.875rem;">${campaign.description}</p>
-                                <span style="color: #10b981; font-size: 0.875rem;">📧 ${campaign.recipientCount} recipients</span>
+                                <h4 class="card__title mb-0">${campaign.name}</h4>
+                                <p class="text-secondary text-sm my-1">${campaign.description}</p>
+                                <span class="text-success text-sm">📧 ${campaign.recipientCount} recipients</span>
                             </div>
-                            <button class="btn" style="background: #3b82f6; color: white;" data-action="schedule-campaign" data-campaign-id="${campaign.id}">📅 Schedule Emails</button>
+                            <button class="btn btn--primary" data-action="schedule-campaign" data-campaign-id="${campaign.id}">📅 Schedule Emails</button>
                         </div>
                     </div>
                 `).join('');
@@ -400,7 +251,7 @@
                 document.getElementById('campaignsCount').textContent = activeCampaigns.length;
             } catch (error) {
                 console.error('Error loading campaigns:', error);
-                document.getElementById('activeCampaigns').innerHTML = '<p style="color: #ef4444;">Error loading campaigns</p>';
+                document.getElementById('activeCampaigns').innerHTML = '<p class="text-error">Error loading campaigns</p>';
             }
         }
 

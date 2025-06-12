@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel - ReallyGoodJob</title>
     <link rel="stylesheet" href="/css/main.css">
+    <script src="/js/theme.js"></script>
     <style>
         .admin {
             padding: 2rem 0;
@@ -227,11 +228,20 @@
     <div class="container">
         <header class="header">
             <h1 class="header__title">ReallyGoodJob Admin</h1>
-            <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div class="header__controls">
+                <button 
+                    data-theme-toggle 
+                    class="theme-toggle" 
+                    aria-label="Toggle dark mode"
+                    title="Toggle dark mode"
+                >
+                    <span class="theme-toggle__icon theme-toggle__sun">☀️</span>
+                    <span class="theme-toggle__icon theme-toggle__moon">🌙</span>
+                </button>
                 <span id="adminEmail" class="text-secondary"></span>
                 <div style="display: flex; gap: 1rem;">
-                    <a href="/dashboard" class="btn" style="background: #6b7280; color: white; text-decoration: none;">Dashboard</a>
-                    <button id="logoutBtn" class="btn" style="background: #ef4444; color: white;">Logout</button>
+                    <a href="/dashboard" class="btn btn--secondary" style="text-decoration: none;">Dashboard</a>
+                    <button id="logoutBtn" class="btn btn--error">Logout</button>
                 </div>
             </div>
         </header>

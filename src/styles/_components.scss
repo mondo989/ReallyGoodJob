@@ -1,0 +1,406 @@
+// Theme Toggle Component
+.theme-toggle {
+  @include button-base;
+  @include theme-property(background-color, $light-bg-secondary, $dark-bg-secondary);
+  @include theme-property(color, $light-text-primary, $dark-text-primary);
+  @include theme-property(border, 1px solid $light-border, 1px solid $dark-border);
+  padding: $spacing-sm;
+  border-radius: $border-radius-lg;
+  position: relative;
+  overflow: hidden;
+  
+  &:hover {
+    @include theme-property(background-color, $light-bg-tertiary, $dark-bg-tertiary);
+  }
+  
+  &__icon {
+    font-size: $font-size-lg;
+    transition: all $transition-base;
+  }
+  
+  &__sun {
+    @include dark-mode {
+      opacity: 0;
+      transform: rotate(180deg);
+    }
+  }
+  
+  &__moon {
+    opacity: 0;
+    transform: rotate(-180deg);
+    position: absolute;
+    
+    @include dark-mode {
+      opacity: 1;
+      transform: rotate(0deg);
+    }
+  }
+}
+
+// Dashboard Components
+.dashboard {
+  padding: $spacing-xl 0;
+  
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: $spacing-xl;
+    margin-top: $spacing-xl;
+  }
+  
+  &__card {
+    @include card;
+    @include fade-in;
+    
+    &:hover {
+      transform: translateY(-2px);
+    }
+  }
+}
+
+// User Info Component
+.user-info {
+  @include theme-property(background-color, $light-bg-secondary, $dark-bg-secondary);
+  @include theme-property(border, 1px solid $light-border, 1px solid $dark-border);
+  padding: $spacing-lg;
+  border-radius: $border-radius;
+  margin-bottom: $spacing-xl;
+  @include fade-in;
+  
+  h2 {
+    @include theme-property(color, $light-text-primary, $dark-text-primary);
+    margin-bottom: $spacing-sm;
+  }
+  
+  p {
+    @include theme-property(color, $light-text-secondary, $dark-text-secondary);
+    margin: 0;
+  }
+}
+
+// Card Components
+.card {
+  @include card;
+  
+  &__title {
+    font-size: $font-size-xl;
+    font-weight: 600;
+    margin-bottom: $spacing-md;
+    @include theme-property(color, $light-text-primary, $dark-text-primary);
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+  }
+  
+  &__content {
+    @include theme-property(color, $light-text-secondary, $dark-text-secondary);
+  }
+  
+  &__actions {
+    margin-top: $spacing-lg;
+    display: flex;
+    gap: $spacing-sm;
+    flex-wrap: wrap;
+  }
+}
+
+// Status Badges
+.status-badge {
+  &--success {
+    @include status-badge(#d1fae5, #065f46, #064e3b, #6ee7b7);
+  }
+  
+  &--pending {
+    @include status-badge(#fef3c7, #92400e, #451a03, #fcd34d);
+  }
+  
+  &--error {
+    @include status-badge(#fee2e2, #991b1b, #7f1d1d, #fca5a5);
+  }
+  
+  &--info {
+    @include status-badge(#dbeafe, #1e40af, #1e3a8a, #93c5fd);
+  }
+}
+
+// Button Components
+.btn {
+  @include button-primary;
+  
+  &--secondary {
+    @include button-secondary;
+  }
+  
+  &--success {
+    @include button-base;
+    @include theme-property(background-color, $light-success, $dark-success);
+    color: white;
+    
+    &:hover:not(:disabled) {
+      @include theme-property(background-color, #059669, #10b981);
+    }
+  }
+  
+  &--warning {
+    @include button-base;
+    @include theme-property(background-color, $light-warning, $dark-warning);
+    color: white;
+    
+    &:hover:not(:disabled) {
+      @include theme-property(background-color, #d97706, #f59e0b);
+    }
+  }
+  
+  &--error {
+    @include button-base;
+    @include theme-property(background-color, $light-error, $dark-error);
+    color: white;
+    
+    &:hover:not(:disabled) {
+      @include theme-property(background-color, #dc2626, #f87171);
+    }
+  }
+  
+  &--small {
+    padding: $spacing-xs $spacing-sm;
+    font-size: $font-size-sm;
+  }
+  
+  &--large {
+    padding: $spacing-md $spacing-xl;
+    font-size: $font-size-lg;
+  }
+  
+  &__icon {
+    font-size: 1.25em;
+  }
+}
+
+// Modal Components
+.modal {
+  display: none;
+  position: fixed;
+  z-index: $z-modal;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  @include theme-property(background-color, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.7));
+  backdrop-filter: blur(4px);
+  
+  &.active {
+    display: block;
+    @include fade-in;
+  }
+  
+  &__content {
+    @include theme-property(background-color, $light-bg-card, $dark-bg-card);
+    margin: 5% auto;
+    border-radius: $border-radius-lg;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    @include theme-property(box-shadow, $light-shadow-lg, $dark-shadow-lg);
+    animation: modalSlideIn $transition-base ease-out;
+  }
+  
+  &__header {
+    padding: $spacing-lg;
+    @include theme-property(border-bottom, 1px solid $light-border, 1px solid $dark-border);
+    @include flex-between;
+    
+    h3 {
+      margin: 0;
+      @include theme-property(color, $light-text-primary, $dark-text-primary);
+    }
+  }
+  
+  &__body {
+    padding: $spacing-lg;
+  }
+  
+  &__actions {
+    display: flex;
+    gap: $spacing-md;
+    justify-content: flex-end;
+    margin-top: $spacing-xl;
+  }
+}
+
+.close {
+  font-size: $font-size-2xl;
+  cursor: pointer;
+  @include theme-property(color, $light-text-muted, $dark-text-muted);
+  transition: color $transition-base;
+  
+  &:hover {
+    @include theme-property(color, $light-error, $dark-error);
+  }
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+// Form Components
+.form-group {
+  margin-bottom: $spacing-lg;
+  
+  label {
+    display: block;
+    margin-bottom: $spacing-sm;
+    font-weight: 500;
+    @include theme-property(color, $light-text-primary, $dark-text-primary);
+  }
+  
+  input,
+  select,
+  textarea {
+    @include form-input;
+  }
+  
+  textarea {
+    resize: vertical;
+    min-height: 100px;
+  }
+}
+
+.schedule-options {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.radio-option {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-sm;
+  @include theme-property(border, 1px solid $light-border, 1px solid $dark-border);
+  border-radius: $border-radius-sm;
+  cursor: pointer;
+  transition: all $transition-base;
+  @include theme-property(background-color, transparent, transparent);
+  
+  &:hover {
+    @include theme-property(background-color, $light-bg-secondary, $dark-bg-secondary);
+  }
+  
+  input[type="radio"] {
+    margin: 0;
+    width: auto;
+    
+    &:checked + span {
+      font-weight: 600;
+      @include theme-property(color, $light-primary, $dark-primary);
+    }
+  }
+  
+  span {
+    @include theme-property(color, $light-text-primary, $dark-text-primary);
+  }
+}
+
+// Table Components
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  @include theme-property(background-color, $light-bg-card, $dark-bg-card);
+  border-radius: $border-radius;
+  overflow: hidden;
+  @include theme-property(box-shadow, $light-shadow, $dark-shadow);
+  
+  th,
+  td {
+    padding: $spacing-md;
+    text-align: left;
+    @include theme-property(border-bottom, 1px solid $light-border, 1px solid $dark-border);
+  }
+  
+  th {
+    @include theme-property(background-color, $light-bg-secondary, $dark-bg-secondary);
+    @include theme-property(color, $light-text-primary, $dark-text-primary);
+    font-weight: 600;
+  }
+  
+  td {
+    @include theme-property(color, $light-text-secondary, $dark-text-secondary);
+  }
+  
+  tr:hover {
+    @include theme-property(background-color, $light-bg-secondary, $dark-bg-tertiary);
+  }
+  
+  tr:last-child td {
+    border-bottom: none;
+  }
+}
+
+// Loading Components
+.loading {
+  @include flex-center;
+  padding: $spacing-xl;
+  
+  &__spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid;
+    @include theme-property(border-color, $light-border, $dark-border);
+    @include theme-property(border-top-color, $light-primary, $dark-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  
+  &__text {
+    margin-left: $spacing-md;
+    @include theme-property(color, $light-text-secondary, $dark-text-secondary);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Alert Components
+.alert {
+  padding: $spacing-md;
+  border-radius: $border-radius;
+  margin-bottom: $spacing-md;
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  
+  &--success {
+    @include theme-property(background-color, #d1fae5, #064e3b);
+    @include theme-property(color, #065f46, #6ee7b7);
+    @include theme-property(border, 1px solid #a7f3d0, 1px solid #047857);
+  }
+  
+  &--error {
+    @include theme-property(background-color, #fee2e2, #7f1d1d);
+    @include theme-property(color, #991b1b, #fca5a5);
+    @include theme-property(border, 1px solid #fecaca, 1px solid #dc2626);
+  }
+  
+  &--warning {
+    @include theme-property(background-color, #fef3c7, #451a03);
+    @include theme-property(color, #92400e, #fcd34d);
+    @include theme-property(border, 1px solid #fde68a, 1px solid #d97706);
+  }
+  
+  &--info {
+    @include theme-property(background-color, #dbeafe, #1e3a8a);
+    @include theme-property(color, #1e40af, #93c5fd);
+    @include theme-property(border, 1px solid #bfdbfe, 1px solid #3b82f6);
+  }
+} 
