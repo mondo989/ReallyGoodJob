@@ -31,12 +31,12 @@
         </header>
 
         <main class="dashboard">
-            <div class="card text-center mb-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+            <div class="card text-center mb-5 admin-hero">
                 <h2 class="text-2xl font-bold mb-2">🛡️ Admin Control Panel</h2>
                 <p>Manage campaigns, approve submissions, and monitor system stats</p>
             </div>
 
-            <div class="admin-header__actions flex gap-3 mb-5 pb-4" style="border-bottom: 1px solid var(--border-color);">
+            <div class="admin-header__actions flex gap-3 mb-5 pb-4 admin-nav-border">
                 <button class="btn btn--primary admin-nav__tab admin-nav__tab--active" data-section="overview">📊 Overview</button>
                 <button class="btn btn--secondary admin-nav__tab" data-section="campaigns">📋 All Campaigns</button>
                 <button class="btn btn--secondary admin-nav__tab" data-section="pending">⏳ Pending Approval</button>
@@ -120,49 +120,49 @@
 
             <!-- Create Campaign Section -->
             <div id="create" class="admin-section">
-                <h3>Create New Campaign</h3>
-                <div style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 2rem; max-width: 600px;">
+                <h3 class="text-xl font-bold mb-4">Create New Campaign</h3>
+                <div class="card create-form-container">
                     <form id="createCampaignForm">
                         <div class="form-group">
-                            <label class="form-label" for="createName">Campaign Name</label>
-                            <input type="text" id="createName" class="form-input" required placeholder="e.g., Thank Local Coffee Shops">
+                            <label for="createName">Campaign Name</label>
+                            <input type="text" id="createName" required placeholder="e.g., Thank Local Coffee Shops">
                         </div>
                         
                         <div class="form-group">
-                            <label class="form-label" for="createDescription">Description</label>
-                            <textarea id="createDescription" class="form-input form-textarea" required placeholder="Brief description of what this campaign is about..."></textarea>
+                            <label for="createDescription">Description</label>
+                            <textarea id="createDescription" required placeholder="Brief description of what this campaign is about..."></textarea>
                         </div>
                         
                         <div class="form-group">
-                            <label class="form-label" for="createExpiration">Expiration Date</label>
-                            <input type="datetime-local" id="createExpiration" class="form-input" required>
+                            <label for="createExpiration">Expiration Date</label>
+                            <input type="datetime-local" id="createExpiration" required>
                         </div>
 
                         <div class="form-group">
-                            <label class="form-label">Recipients</label>
-                            <div id="createRecipientsList" style="max-height: 200px; overflow-y: auto; border: 1px solid #d1d5db; border-radius: 4px; padding: 1rem; margin-bottom: 0.5rem;">
-                                <p style="color: #6b7280;">No recipients added yet. Add recipients below.</p>
+                            <label>Recipients</label>
+                            <div id="createRecipientsList" class="card p-3 recipients-list">
+                                <p class="text-secondary">No recipients added yet. Add recipients below.</p>
                             </div>
-                            <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
-                                <input type="email" id="createRecipientEmail" class="form-input" placeholder="Enter email address" style="flex: 1;">
-                                <input type="text" id="createRecipientName" class="form-input" placeholder="Display name (optional)" style="flex: 1;">
-                                <button type="button" id="createAddRecipient" class="btn" style="background: #10b981; color: white; white-space: nowrap;">Add</button>
+                            <div class="flex gap-2 mb-3">
+                                <input type="email" id="createRecipientEmail" placeholder="Enter email address" class="flex-1">
+                                <input type="text" id="createRecipientName" placeholder="Display name (optional)" class="flex-1">
+                                <button type="button" id="createAddRecipient" class="btn btn--success">Add</button>
                             </div>
                         </div>
 
                         <div class="form-group">
-                            <label class="form-label" for="createStatus">Status</label>
-                            <select id="createStatus" class="form-input" required>
+                            <label for="createStatus">Status</label>
+                            <select id="createStatus" required>
                                 <option value="Active">Active (Ready to send)</option>
                                 <option value="Pending">Pending (Requires approval)</option>
                             </select>
-                            <p style="color: #6b7280; font-size: 0.875rem; margin-top: 0.25rem;">
+                            <p class="text-secondary text-sm mt-1">
                                 As an admin, you can create campaigns that are immediately active or require approval.
                             </p>
                         </div>
                         
-                        <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
-                            <button type="button" id="resetCreateForm" class="btn" style="background: #6b7280; color: white;">Reset Form</button>
+                        <div class="flex gap-3 justify-end mt-5">
+                            <button type="button" id="resetCreateForm" class="btn btn--secondary">Reset Form</button>
                             <button type="submit" class="btn btn--primary">Create Campaign</button>
                         </div>
                     </form>
@@ -203,7 +203,7 @@
 
                     <div class="form-group">
                         <label>Recipients</label>
-                        <div id="recipientsList" class="card p-3" style="max-height: 200px; overflow-y: auto;">
+                        <div id="recipientsList" class="card p-3 recipients-list--modal">
                             <p class="text-secondary">Loading recipients...</p>
                         </div>
                         <div class="flex gap-2 mt-2">

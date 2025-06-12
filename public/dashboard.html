@@ -132,51 +132,92 @@
                 </div>
 
                 <div id="scheduleOptions" class="form-group" style="display: none;">
-                    <label for="sendFrequency">Send Frequency:</label>
-                    <select id="sendFrequency">
-                        <option value="once">📧 Send Once</option>
-                        <option value="multiple" data-premium="true">🔄 Multiple Times (Premium)</option>
-                    </select>
+                    <label>Send Frequency:</label>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="sendFrequency" value="once" checked>
+                            <span>📧 Send Once</span>
+                        </label>
+                        <label class="radio-option radio-option--premium">
+                            <input type="radio" name="sendFrequency" value="multiple" data-premium="true">
+                            <span>🔄 Multiple Times (Premium)</span>
+                        </label>
+                    </div>
                     
                     <div id="singleSendOptions">
-                        <label for="sendWindow">Select Time Window:</label>
-                        <select id="sendWindow">
-                            <option value="morning">🌅 Morning (8:00 AM - 12:00 PM)</option>
-                            <option value="afternoon">☀️ Afternoon (12:00 PM - 5:00 PM)</option>
-                            <option value="evening">🌆 Evening (5:00 PM - 9:00 PM)</option>
-                        </select>
-                        
-                        <label for="sendDate">Select Date:</label>
-                        <input type="date" id="sendDate" required>
+                        <label>Select Time Window:</label>
+                        <div class="radio-group">
+                            <label class="radio-option">
+                                <input type="radio" name="timeWindow" value="morning" checked>
+                                <span>🌅 Morning (8:00 AM - 12:00 PM)</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="timeWindow" value="afternoon">
+                                <span>☀️ Afternoon (12:00 PM - 5:00 PM)</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="timeWindow" value="evening">
+                                <span>🌆 Evening (5:00 PM - 9:00 PM)</span>
+                            </label>
+                        </div>
                     </div>
                     
                     <div id="multipleSendOptions" style="display: none;">
                         <label>Select Time Windows (Premium Feature):</label>
-                        <div class="schedule-options">
-                            <label class="radio-option">
-                                <input type="checkbox" name="timeWindows" value="morning">
+                        <div class="checkbox-group">
+                            <label class="checkbox-option">
+                                <input type="checkbox" name="timeWindows" value="morning" checked>
                                 <span>🌅 Morning (8:00 AM - 12:00 PM)</span>
                             </label>
-                            <label class="radio-option">
-                                <input type="checkbox" name="timeWindows" value="afternoon">
+                            <label class="checkbox-option">
+                                <input type="checkbox" name="timeWindows" value="afternoon" checked>
                                 <span>☀️ Afternoon (12:00 PM - 5:00 PM)</span>
                             </label>
-                            <label class="radio-option">
-                                <input type="checkbox" name="timeWindows" value="evening">
+                            <label class="checkbox-option">
+                                <input type="checkbox" name="timeWindows" value="evening" checked>
                                 <span>🌆 Evening (5:00 PM - 9:00 PM)</span>
                             </label>
                         </div>
                         
-                        <label for="multipleSendDate">Select Date:</label>
-                        <input type="date" id="multipleSendDate" required>
-                        
                         <p class="text-warning text-sm mt-2">
-                            ⭐ <strong>Premium Feature:</strong> Send the same campaign multiple times throughout the day for maximum impact.
+                            ⭐ <strong>Premium Feature:</strong> Send emails at multiple times throughout each day for maximum impact.
                         </p>
                     </div>
                     
+                    <div class="date-range-section">
+                        <div class="form-row">
+                            <div class="form-col">
+                                <label for="startDate">Scheduled Date:</label>
+                                <input type="date" id="startDate" required>
+                            </div>
+                            <div class="form-col">
+                                <label>Campaign Duration:</label>
+                                <div class="radio-group radio-group--compact">
+                                    <label class="radio-option radio-option--small">
+                                        <input type="radio" name="duration" value="3" checked>
+                                        <span>📅 3 Days</span>
+                                    </label>
+                                    <label class="radio-option radio-option--small radio-option--premium">
+                                        <input type="radio" name="duration" value="7" data-premium="true">
+                                        <span>📆 1 Week (Premium)</span>
+                                    </label>
+                                    <label class="radio-option radio-option--small radio-option--premium">
+                                        <input type="radio" name="duration" value="30" data-premium="true">
+                                        <span>🗓️ 1 Month (Premium)</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="expiration-display">
+                            <p class="text-secondary text-sm">
+                                📋 <strong>Campaign will run until:</strong> <span id="expirationDate">-</span>
+                            </p>
+                        </div>
+                    </div>
+                    
                     <p class="text-secondary text-sm mt-2">
-                        📝 <strong>Note:</strong> Free tier allows 1 send per day. Premium tier allows up to 3 sends per day (one per time window).
+                        📝 <strong>Note:</strong> Campaign will send emails at selected times each day during the duration period.
                     </p>
                 </div>
 
@@ -375,12 +416,22 @@
             document.getElementById('scheduleOptions').style.display = 'none';
             document.getElementById('scheduleButtonText').textContent = '🚀 Send Now';
             
-            // Set minimum date to today
+            // Reset frequency and time windows
+            document.querySelector('input[name="sendFrequency"][value="once"]').checked = true;
+            document.querySelector('input[name="timeWindow"][value="morning"]').checked = true;
+            document.getElementById('singleSendOptions').style.display = 'block';
+            document.getElementById('multipleSendOptions').style.display = 'none';
+            
+            // Reset duration
+            document.querySelector('input[name="duration"][value="3"]').checked = true;
+            
+            // Set default dates
             const today = new Date().toISOString().split('T')[0];
-            document.getElementById('sendDate').value = today;
-            document.getElementById('sendDate').min = today;
-            document.getElementById('multipleSendDate').value = today;
-            document.getElementById('multipleSendDate').min = today;
+            document.getElementById('startDate').value = today;
+            document.getElementById('startDate').min = today;
+            
+            // Calculate and display expiration date
+            updateExpirationDate();
             
             // Handle premium features UI
             updatePremiumFeaturesUI();
@@ -482,28 +533,86 @@
             return userFeatures;
         }
 
+        // Calculate and update expiration date
+        function updateExpirationDate() {
+            const startDate = document.getElementById('startDate').value;
+            const duration = document.querySelector('input[name="duration"]:checked')?.value;
+            
+            if (startDate && duration) {
+                const start = new Date(startDate);
+                const expiration = new Date(start);
+                expiration.setDate(start.getDate() + parseInt(duration));
+                
+                const options = { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                };
+                document.getElementById('expirationDate').textContent = 
+                    expiration.toLocaleDateString('en-US', options);
+            }
+        }
+
         // Update premium features UI
         function updatePremiumFeaturesUI() {
             const effectiveFeatures = getEffectiveUserFeatures();
             if (!effectiveFeatures) return;
             
-            const multipleOption = document.querySelector('#sendFrequency option[value="multiple"]');
-            const personalizedTextarea = document.getElementById('personalizedMessage');
-            
             // Handle multiple sends feature
-            if (!effectiveFeatures.multipleSends) {
-                multipleOption.disabled = true;
-                multipleOption.textContent = '🔄 Multiple Times (Premium) - Upgrade Required';
-                multipleOption.style.color = '#999';
-            } else {
-                multipleOption.disabled = false;
-                multipleOption.textContent = premiumOverride 
-                    ? '🔄 Multiple Times (Premium Override)' 
-                    : '🔄 Multiple Times (Premium)';
-                multipleOption.style.color = '';
+            const multipleFrequencyOption = document.querySelector('input[name="sendFrequency"][value="multiple"]');
+            const multipleFrequencyLabel = multipleFrequencyOption?.closest('.radio-option');
+            
+            if (multipleFrequencyOption && multipleFrequencyLabel) {
+                if (!effectiveFeatures.multipleSends) {
+                    multipleFrequencyOption.disabled = true;
+                    multipleFrequencyLabel.classList.add('disabled');
+                    multipleFrequencyLabel.title = 'Upgrade to Premium to unlock multiple sends per day';
+                } else {
+                    multipleFrequencyOption.disabled = false;
+                    multipleFrequencyLabel.classList.remove('disabled');
+                    multipleFrequencyLabel.title = premiumOverride 
+                        ? 'Multiple sends per day (Premium Override Active)'
+                        : 'Multiple sends per day (Premium Feature)';
+                }
+            }
+            
+            // Handle duration premium features
+            const weekDurationOption = document.querySelector('input[name="duration"][value="7"]');
+            const monthDurationOption = document.querySelector('input[name="duration"][value="30"]');
+            const weekLabel = weekDurationOption?.closest('.radio-option');
+            const monthLabel = monthDurationOption?.closest('.radio-option');
+            
+            if (weekDurationOption && weekLabel) {
+                if (!effectiveFeatures.advancedScheduling) {
+                    weekDurationOption.disabled = true;
+                    weekLabel.classList.add('disabled');
+                    weekLabel.title = 'Upgrade to Premium to unlock 1 week campaigns';
+                } else {
+                    weekDurationOption.disabled = false;
+                    weekLabel.classList.remove('disabled');
+                    weekLabel.title = premiumOverride 
+                        ? '1 week campaigns (Premium Override Active)'
+                        : '1 week campaigns (Premium Feature)';
+                }
+            }
+            
+            if (monthDurationOption && monthLabel) {
+                if (!effectiveFeatures.advancedScheduling) {
+                    monthDurationOption.disabled = true;
+                    monthLabel.classList.add('disabled');
+                    monthLabel.title = 'Upgrade to Premium to unlock 1 month campaigns';
+                } else {
+                    monthDurationOption.disabled = false;
+                    monthLabel.classList.remove('disabled');
+                    monthLabel.title = premiumOverride 
+                        ? '1 month campaigns (Premium Override Active)'
+                        : '1 month campaigns (Premium Feature)';
+                }
             }
             
             // Handle personalized messages feature
+            const personalizedTextarea = document.getElementById('personalizedMessage');
             if (!effectiveFeatures.personalizedMessages) {
                 personalizedTextarea.disabled = true;
                 personalizedTextarea.placeholder = 'Personalized messages are a Premium feature. Upgrade your account to unlock this feature.';
@@ -562,7 +671,8 @@
                 const payload = {
                     mood: mood,
                     sendNow: sendNow,
-                    personalizedMessage: personalizedMessage
+                    personalizedMessage: personalizedMessage,
+                    premiumOverride: premiumOverride // Send override status to backend
                 };
                 
                 if (!sendNow) {
@@ -671,19 +781,29 @@
             });
 
             // Send frequency change handler
-            document.getElementById('sendFrequency').addEventListener('change', (e) => {
-                const frequency = e.target.value;
-                const singleOptions = document.getElementById('singleSendOptions');
-                const multipleOptions = document.getElementById('multipleSendOptions');
+            document.addEventListener('change', (e) => {
+                if (e.target.name === 'sendFrequency') {
+                    const frequency = e.target.value;
+                    const singleOptions = document.getElementById('singleSendOptions');
+                    const multipleOptions = document.getElementById('multipleSendOptions');
+                    
+                    if (frequency === 'multiple') {
+                        singleOptions.style.display = 'none';
+                        multipleOptions.style.display = 'block';
+                    } else {
+                        singleOptions.style.display = 'block';
+                        multipleOptions.style.display = 'none';
+                    }
+                }
                 
-                if (frequency === 'multiple') {
-                    singleOptions.style.display = 'none';
-                    multipleOptions.style.display = 'block';
-                } else {
-                    singleOptions.style.display = 'block';
-                    multipleOptions.style.display = 'none';
+                // Duration change handler
+                if (e.target.name === 'duration') {
+                    updateExpirationDate();
                 }
             });
+            
+            // Start date change handler
+            document.getElementById('startDate').addEventListener('change', updateExpirationDate);
             
             // Close modal when clicking outside
             document.getElementById('scheduleModal').addEventListener('click', (e) => {
@@ -726,21 +846,29 @@
                         personalizedMessage: personalizedMessage || null
                     });
                 } else {
-                    const frequency = document.getElementById('sendFrequency').value;
+                    const frequency = document.querySelector('input[name="sendFrequency"]:checked').value;
+                    const startDate = document.getElementById('startDate').value;
+                    const duration = document.querySelector('input[name="duration"]:checked').value;
+                    
+                    if (!startDate) {
+                        alert('Please select a start date');
+                        return;
+                    }
+                    
+                    // Validate premium duration features
+                    const effectiveFeatures = getEffectiveUserFeatures();
+                    if ((duration === '7' || duration === '30') && !effectiveFeatures?.advancedScheduling) {
+                        alert('Extended campaign durations (1 week, 1 month) are Premium features. Please upgrade your account or select 3 days.');
+                        return;
+                    }
                     
                     if (frequency === 'multiple') {
                         // Handle multiple sends (Premium feature)
                         const selectedWindows = Array.from(document.querySelectorAll('input[name="timeWindows"]:checked'))
                             .map(cb => cb.value);
-                        const date = document.getElementById('multipleSendDate').value;
                         
                         if (selectedWindows.length === 0) {
                             alert('Please select at least one time window');
-                            return;
-                        }
-                        
-                        if (!date) {
-                            alert('Please select a date');
                             return;
                         }
                         
@@ -749,25 +877,21 @@
                             sendNow: false, 
                             frequency: 'multiple',
                             timeWindows: selectedWindows,
-                            date,
+                            date: startDate,
+                            duration,
                             personalizedMessage: personalizedMessage || null
                         });
                     } else {
                         // Handle single send
-                        const window = document.getElementById('sendWindow').value;
-                        const date = document.getElementById('sendDate').value;
-                        
-                        if (!date) {
-                            alert('Please select a date');
-                            return;
-                        }
+                        const timeWindow = document.querySelector('input[name="timeWindow"]:checked').value;
                         
                         sendCampaignEmails(currentCampaign.id, { 
                             mood, 
                             sendNow: false, 
                             frequency: 'once',
-                            window, 
-                            date,
+                            window: timeWindow,
+                            date: startDate,
+                            duration,
                             personalizedMessage: personalizedMessage || null
                         });
                     }

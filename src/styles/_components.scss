@@ -273,40 +273,145 @@
   }
 }
 
-.schedule-options {
+// Form Layout
+.form-row {
+  display: flex;
+  gap: $spacing-lg;
+  margin-bottom: $spacing-md;
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: $spacing-md;
+  }
+}
+
+.form-col {
+  flex: 1;
+}
+
+.date-range-section {
+  margin-top: $spacing-lg;
+  padding: $spacing-md;
+  @include theme-property(background-color, $light-bg-secondary, $dark-bg-secondary);
+  border-radius: $border-radius;
+  @include theme-property(border, 1px solid $light-border, 1px solid $dark-border);
+}
+
+.expiration-display {
+  margin-top: $spacing-md;
+  padding: $spacing-sm;
+  @include theme-property(background-color, $light-bg-tertiary, $dark-bg-tertiary);
+  border-radius: $border-radius-sm;
+  text-align: center;
+  
+  #expirationDate {
+    font-weight: 600;
+    @include theme-property(color, $light-primary, $dark-primary);
+  }
+}
+
+// Radio and Checkbox Groups
+.radio-group,
+.checkbox-group {
   display: flex;
   flex-direction: column;
   gap: $spacing-sm;
+  
+  &--compact {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: $spacing-xs;
+  }
 }
 
-.radio-option {
+.radio-option,
+.checkbox-option {
   display: flex;
   align-items: center;
   gap: $spacing-sm;
-  padding: $spacing-sm;
+  padding: $spacing-sm $spacing-md;
   @include theme-property(border, 1px solid $light-border, 1px solid $dark-border);
   border-radius: $border-radius-sm;
   cursor: pointer;
   transition: all $transition-base;
   @include theme-property(background-color, transparent, transparent);
+  position: relative;
   
   &:hover {
     @include theme-property(background-color, $light-bg-secondary, $dark-bg-secondary);
+    transform: translateY(-1px);
+    @include theme-property(box-shadow, 0 2px 8px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.3));
   }
   
-  input[type="radio"] {
+  &--small {
+    padding: $spacing-xs $spacing-sm;
+    font-size: $font-size-sm;
+  }
+  
+  &--premium {
+    @include theme-property(border-color, $light-warning, $dark-warning);
+    
+    &::after {
+      content: "⭐";
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      font-size: 12px;
+      background: linear-gradient(135deg, #fbbf24, #f59e0b);
+      border-radius: 50%;
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+    }
+    
+    &.disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      
+      &:hover {
+        transform: none;
+        box-shadow: none;
+      }
+    }
+  }
+  
+  input[type="radio"],
+  input[type="checkbox"] {
     margin: 0;
-    width: auto;
+    width: 16px;
+    height: 16px;
+    accent-color: var(--primary-color);
     
     &:checked + span {
       font-weight: 600;
       @include theme-property(color, $light-primary, $dark-primary);
     }
+    
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
   }
   
   span {
     @include theme-property(color, $light-text-primary, $dark-text-primary);
+    transition: all $transition-base;
+    user-select: none;
   }
+  
+  &.selected {
+    @include theme-property(background-color, rgba(59, 130, 246, 0.1), rgba(147, 197, 253, 0.1));
+    @include theme-property(border-color, $light-primary, $dark-primary);
+  }
+}
+
+.schedule-options {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
 }
 
 // Table Components

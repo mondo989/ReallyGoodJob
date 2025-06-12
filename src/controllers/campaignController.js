@@ -226,7 +226,8 @@ class CampaignController {
         window, 
         timeWindows = [],
         scheduledDate,
-        personalizedMessage 
+        personalizedMessage,
+        premiumOverride = false
       } = req.body;
       const user = req.user;
 
@@ -238,6 +239,7 @@ class CampaignController {
         timeWindows,
         scheduledDate,
         personalizedMessage: personalizedMessage ? 'PROVIDED' : 'NONE',
+        premiumOverride,
         userId: user.id,
         userTier: user.tier
       });
@@ -250,11 +252,15 @@ class CampaignController {
       }
 
       // Check premium features using feature flag service
-      const isPremiumUser = featureFlagService.isPremiumUser(user);
+      // Create effective user with override if provided
+      const effectiveUser = premiumOverride ? { ...user, tier: 'Premium' } : user;
+      const isPremiumUser = featureFlagService.isPremiumUser(effectiveUser);
+      
+      console.log(`🔍 Premium check: user.tier=${user.tier}, premiumOverride=${premiumOverride}, effectiveUser.tier=${effectiveUser.tier}, isPremiumUser=${isPremiumUser}`);
       
       // Validate personalized message (Premium feature)
       if (personalizedMessage) {
-        const validation = featureFlagService.validatePremiumFeature(user, 'PERSONALIZED_MESSAGES', 'Personalized messages');
+        const validation = featureFlagService.validatePremiumFeature(effectiveUser, 'PERSONALIZED_MESSAGES', 'Personalized messages');
         if (!validation.allowed) {
           return res.status(403).json({
             error: validation.error,
@@ -265,7 +271,7 @@ class CampaignController {
 
       // Validate multiple sends per day (Premium feature)
       if (frequency === 'multiple') {
-        const validation = featureFlagService.validatePremiumFeature(user, 'MULTIPLE_SENDS', 'Multiple sends per day');
+        const validation = featureFlagService.validatePremiumFeature(effectiveUser, 'MULTIPLE_SENDS', 'Multiple sends per day');
         if (!validation.allowed) {
           return res.status(403).json({
             error: validation.error,
