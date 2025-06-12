@@ -463,4 +463,88 @@
 
 .font-bold {
   font-weight: 600;
+}
+
+// Grid Utilities
+.grid {
+  display: grid;
+}
+
+.grid-cols-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.gap-2 {
+  gap: $spacing-sm;
+}
+
+.gap-4 {
+  gap: $spacing-lg;
+}
+
+// Additional Margin/Padding
+.mb-5 {
+  margin-bottom: $spacing-2xl;
+}
+
+.mt-2 {
+  margin-top: $spacing-sm;
+}
+
+.pb-4 {
+  padding-bottom: $spacing-lg;
+}
+
+.p-3 {
+  padding: $spacing-md;
+}
+
+// Flexbox
+.flex-1 {
+  flex: 1;
+}
+
+// Admin-specific styles
+.admin-section {
+  display: none;
+  
+  &--active {
+    display: block;
+  }
+}
+
+.admin-nav__tab {
+  &--active {
+    background-color: var(--primary-color) !important;
+    color: white !important;
+  }
+}
+
+// Button size variants
+.btn--small {
+  padding: $spacing-xs $spacing-sm;
+  font-size: $font-size-sm;
+}
+
+// Additional text utilities
+.text-muted {
+  @include theme-property(color, $light-text-muted, $dark-text-muted);
+}
+
+// Border utilities
+.border {
+  @include theme-property(border, 1px solid $light-border, 1px solid $dark-border);
+}
+
+.rounded {
+  border-radius: $border-radius-sm;
+}
+
+// Additional margin utilities
+.mb-2 {
+  margin-bottom: $spacing-sm;
+}
+
+.mb-3 {
+  margin-bottom: $spacing-md;
 } 
