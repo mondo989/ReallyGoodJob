@@ -393,34 +393,128 @@ class AdminController {
         });
       }
 
-      // Remove all existing recipients for this campaign
-      await Recipient.destroy({
+      // Get existing recipients
+      const existingRecipients = await Recipient.findAll({
         where: { campaignId: id }
       });
 
-      // Add new recipients
-      if (recipients && recipients.length > 0) {
-        const recipientData = recipients.map(recipient => ({
-          campaignId: id,
-          email: recipient.email,
-          displayName: recipient.displayName || recipient.email.split('@')[0],
-          personalizedName: recipient.displayName || recipient.email.split('@')[0]
-        }));
+      // Create a transaction to ensure data consistency
+      const transaction = await campaign.sequelize.transaction();
 
-        await Recipient.bulkCreate(recipientData);
+      try {
+        // If there are existing recipients, we need to handle foreign key constraints
+        if (existingRecipients.length > 0) {
+          // First, check if any recipients have been used in email logs
+          const { EmailLog } = require('../models/database');
+          const emailLogsExist = await EmailLog.count({
+            where: { 
+              recipientId: existingRecipients.map(r => r.id)
+            }
+          });
+
+          if (emailLogsExist > 0) {
+            // If email logs exist, we can't delete recipients due to foreign key constraints
+            // Instead, we'll update existing recipients and add new ones
+            console.log(`⚠️ Campaign has email logs, using update strategy instead of delete/recreate`);
+            
+            const existingEmails = existingRecipients.map(r => r.email);
+            const newRecipients = recipients || [];
+
+            // Update existing recipients that are still in the new list
+            for (const existingRecipient of existingRecipients) {
+              const newRecipient = newRecipients.find(r => r.email === existingRecipient.email);
+              if (newRecipient) {
+                await existingRecipient.update({
+                  displayName: newRecipient.displayName || newRecipient.email.split('@')[0],
+                  personalizedName: newRecipient.displayName || newRecipient.email.split('@')[0]
+                }, { transaction });
+              }
+            }
+
+            // Add new recipients that don't exist yet
+            const recipientsToAdd = newRecipients.filter(r => !existingEmails.includes(r.email));
+            if (recipientsToAdd.length > 0) {
+              const recipientData = recipientsToAdd.map(recipient => ({
+                campaignId: id,
+                email: recipient.email,
+                displayName: recipient.displayName || recipient.email.split('@')[0],
+                personalizedName: recipient.displayName || recipient.email.split('@')[0]
+              }));
+
+              await Recipient.bulkCreate(recipientData, { transaction });
+              console.log(`✅ Added ${recipientsToAdd.length} new recipients`);
+            }
+
+            // Note: We cannot remove recipients that have email logs due to foreign key constraints
+            // This is a limitation when recipients have already been used for sending emails
+          } else {
+            // No email logs exist, but let's still use the safer update approach
+            console.log(`📝 No email logs found, using safe update strategy`);
+            
+            const existingEmails = existingRecipients.map(r => r.email);
+            const newRecipients = recipients || [];
+
+            // Update existing recipients
+            for (const existingRecipient of existingRecipients) {
+              const newRecipient = newRecipients.find(r => r.email === existingRecipient.email);
+              if (newRecipient) {
+                await existingRecipient.update({
+                  displayName: newRecipient.displayName || newRecipient.email.split('@')[0],
+                  personalizedName: newRecipient.displayName || newRecipient.email.split('@')[0]
+                }, { transaction });
+              }
+            }
+
+            // Add new recipients that don't exist yet
+            const recipientsToAdd = newRecipients.filter(r => !existingEmails.includes(r.email));
+            if (recipientsToAdd.length > 0) {
+              const recipientData = recipientsToAdd.map(recipient => ({
+                campaignId: id,
+                email: recipient.email,
+                displayName: recipient.displayName || recipient.email.split('@')[0],
+                personalizedName: recipient.displayName || recipient.email.split('@')[0]
+              }));
+
+              await Recipient.bulkCreate(recipientData, { transaction });
+              console.log(`✅ Added ${recipientsToAdd.length} new recipients`);
+            }
+          }
+        } else {
+          // No existing recipients, just add new ones
+          if (recipients && recipients.length > 0) {
+            const recipientData = recipients.map(recipient => ({
+              campaignId: id,
+              email: recipient.email,
+              displayName: recipient.displayName || recipient.email.split('@')[0],
+              personalizedName: recipient.displayName || recipient.email.split('@')[0]
+            }));
+
+            await Recipient.bulkCreate(recipientData, { transaction });
+          }
+        }
+
+        await transaction.commit();
+
+        // Get final recipient count
+        const finalRecipients = await Recipient.findAll({
+          where: { campaignId: id }
+        });
+
+        console.log(`✏️ Campaign "${campaign.name}" recipients updated by admin ${adminUser.email}`);
+
+        res.json({
+          success: true,
+          message: 'Recipients updated successfully',
+          recipientCount: finalRecipients.length
+        });
+      } catch (transactionError) {
+        await transaction.rollback();
+        throw transactionError;
       }
-
-      console.log(`✏️ Campaign "${campaign.name}" recipients updated by admin ${adminUser.email}`);
-
-      res.json({
-        success: true,
-        message: 'Recipients updated successfully',
-        recipientCount: recipients ? recipients.length : 0
-      });
     } catch (error) {
       console.error('Error updating campaign recipients:', error);
       res.status(500).json({
-        error: 'Failed to update campaign recipients'
+        error: 'Failed to update recipients'
       });
     }
   }
