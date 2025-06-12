@@ -1,5 +1,6 @@
 const { Campaign, User, Recipient } = require('../models/database');
 const config = require('../config/config');
+const featureFlagService = require('../services/featureFlagService');
 
 class CampaignController {
   /**
@@ -218,15 +219,27 @@ class CampaignController {
   async sendCampaignEmails(req, res) {
     try {
       const { id } = req.params;
-      const { mood, sendNow = true, window, scheduledDate } = req.body;
+      const { 
+        mood, 
+        sendNow = true, 
+        frequency = 'once',
+        window, 
+        timeWindows = [],
+        scheduledDate,
+        personalizedMessage 
+      } = req.body;
       const user = req.user;
 
       console.log(`📧 Send email request for campaign ${id}:`, {
         mood,
         sendNow,
+        frequency,
         window,
+        timeWindows,
         scheduledDate,
-        userId: user.id
+        personalizedMessage: personalizedMessage ? 'PROVIDED' : 'NONE',
+        userId: user.id,
+        userTier: user.tier
       });
 
       // Validate mood selection
@@ -236,14 +249,33 @@ class CampaignController {
         });
       }
 
-      // Validate scheduling parameters if not sending now
-      if (!sendNow) {
-        if (!window || !['morning', 'afternoon', 'evening'].includes(window)) {
-          return res.status(400).json({
-            error: 'Valid time window is required for scheduling (morning, afternoon, or evening)'
+      // Check premium features using feature flag service
+      const isPremiumUser = featureFlagService.isPremiumUser(user);
+      
+      // Validate personalized message (Premium feature)
+      if (personalizedMessage) {
+        const validation = featureFlagService.validatePremiumFeature(user, 'PERSONALIZED_MESSAGES', 'Personalized messages');
+        if (!validation.allowed) {
+          return res.status(403).json({
+            error: validation.error,
+            premiumFeature: validation.premiumFeature
           });
         }
-        
+      }
+
+      // Validate multiple sends per day (Premium feature)
+      if (frequency === 'multiple') {
+        const validation = featureFlagService.validatePremiumFeature(user, 'MULTIPLE_SENDS', 'Multiple sends per day');
+        if (!validation.allowed) {
+          return res.status(403).json({
+            error: validation.error,
+            premiumFeature: validation.premiumFeature
+          });
+        }
+      }
+
+      // Validate scheduling parameters if not sending now
+      if (!sendNow) {
         if (!scheduledDate) {
           return res.status(400).json({
             error: 'Scheduled date is required'
@@ -258,6 +290,30 @@ class CampaignController {
           return res.status(400).json({
             error: 'Cannot schedule emails for past dates'
           });
+        }
+
+        if (frequency === 'multiple') {
+          // Validate multiple time windows
+          if (!timeWindows || timeWindows.length === 0) {
+            return res.status(400).json({
+              error: 'At least one time window is required for multiple sends'
+            });
+          }
+          
+          const validWindows = ['morning', 'afternoon', 'evening'];
+          const invalidWindows = timeWindows.filter(w => !validWindows.includes(w));
+          if (invalidWindows.length > 0) {
+            return res.status(400).json({
+              error: `Invalid time windows: ${invalidWindows.join(', ')}`
+            });
+          }
+        } else {
+          // Validate single time window
+          if (!window || !['morning', 'afternoon', 'evening'].includes(window)) {
+            return res.status(400).json({
+              error: 'Valid time window is required for scheduling (morning, afternoon, or evening)'
+            });
+          }
         }
       }
 
@@ -310,11 +366,6 @@ class CampaignController {
         };
         
         const scheduleDate = new Date(scheduledDate);
-        const windowTime = windowTimes[window];
-        
-        // Set next run time to the start of the selected window
-        const nextRunAt = new Date(scheduleDate);
-        nextRunAt.setHours(windowTime.start, 0, 0, 0);
         
         // Get the selected mood template for scheduling
         const { TemplateMood } = require('../models/database');
@@ -328,29 +379,78 @@ class CampaignController {
           });
         }
 
-        // Create schedule entry
-        await SendSchedule.create({
-          campaignId: campaign.id,
-          userId: user.id,
-          currentMoodId: selectedMood.id,
-          window: window,
-          nextRunAt: nextRunAt,
-          isActive: true,
-          remainingSendsThisWindow: 1,
-          dailySendsCount: 0
-        });
+        const scheduleEntries = [];
+        
+        if (frequency === 'multiple') {
+          // Create multiple schedule entries for each time window
+          for (const timeWindow of timeWindows) {
+            const windowTime = windowTimes[timeWindow];
+            const nextRunAt = new Date(scheduleDate);
+            nextRunAt.setHours(windowTime.start, 0, 0, 0);
+            
+            const scheduleEntry = await SendSchedule.create({
+              campaignId: campaign.id,
+              userId: user.id,
+              currentMoodId: selectedMood.id,
+              window: timeWindow,
+              nextRunAt: nextRunAt,
+              isActive: true,
+              remainingSendsThisWindow: 1,
+              dailySendsCount: 0,
+              personalizedMessage: personalizedMessage || null,
+              frequency: 'multiple'
+            });
+            
+            scheduleEntries.push(scheduleEntry);
+          }
+          
+          console.log(`📅 Campaign "${campaign.name}" scheduled for ${timeWindows.length} time windows on ${scheduledDate} with ${mood} mood (Premium)`);
+          
+          return res.json({
+            success: true,
+            scheduled: true,
+            frequency: 'multiple',
+            timeWindows: timeWindows,
+            scheduledDate: scheduledDate,
+            mood: mood,
+            personalizedMessage: personalizedMessage ? 'included' : null,
+            recipientCount: campaign.Recipients.length,
+            scheduleCount: scheduleEntries.length,
+            message: `Campaign scheduled for ${timeWindows.length} time windows on ${scheduledDate} with ${mood} mood`
+          });
+        } else {
+          // Single schedule entry
+          const windowTime = windowTimes[window];
+          const nextRunAt = new Date(scheduleDate);
+          nextRunAt.setHours(windowTime.start, 0, 0, 0);
+          
+          await SendSchedule.create({
+            campaignId: campaign.id,
+            userId: user.id,
+            currentMoodId: selectedMood.id,
+            window: window,
+            nextRunAt: nextRunAt,
+            isActive: true,
+            remainingSendsThisWindow: 1,
+            dailySendsCount: 0,
+            personalizedMessage: personalizedMessage || null,
+            frequency: 'once'
+          });
 
-        console.log(`📅 Campaign "${campaign.name}" scheduled for ${window} window on ${scheduledDate} with ${mood} mood`);
+          console.log(`📅 Campaign "${campaign.name}" scheduled for ${window} window on ${scheduledDate} with ${mood} mood`);
 
-        return res.json({
-          success: true,
-          scheduled: true,
-          window: window,
-          scheduledDate: scheduledDate,
-          mood: mood,
-          recipientCount: campaign.Recipients.length,
-          message: `Campaign scheduled for ${window} window on ${scheduledDate} with ${mood} mood`
-        });
+          return res.json({
+            success: true,
+            scheduled: true,
+            frequency: 'once',
+            window: window,
+            scheduledDate: scheduledDate,
+            mood: mood,
+            personalizedMessage: personalizedMessage ? 'included' : null,
+            recipientCount: campaign.Recipients.length,
+            message: `Campaign scheduled for ${window} window on ${scheduledDate} with ${mood} mood`
+          });
+        }
       }
 
       // Send immediately
@@ -379,11 +479,16 @@ class CampaignController {
             .replace('[Campaign Name]', campaign.name)
             .replace('[Sender Name]', user.name || user.email);
             
-          const message = selectedMoodTemplate.bodyText
+          let message = selectedMoodTemplate.bodyText
             .replace('[Recipient Name]', recipient.personalizedName)
             .replace('[Campaign Name]', campaign.name)
             .replace('[Sender Name]', user.name || user.email)
             .replace('[Sender Note]', campaign.description);
+          
+          // Add personalized message if provided (Premium feature)
+          if (personalizedMessage && isPremiumUser) {
+            message += '\n\n---\n' + personalizedMessage;
+          }
 
           // Create email log entry with all required fields
           const { EmailLog } = require('../models/database');

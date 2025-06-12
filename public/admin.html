@@ -41,6 +41,7 @@
                 <button class="btn btn--secondary admin-nav__tab" data-section="campaigns">📋 All Campaigns</button>
                 <button class="btn btn--secondary admin-nav__tab" data-section="pending">⏳ Pending Approval</button>
                 <button class="btn btn--secondary admin-nav__tab" data-section="create">➕ Create Campaign</button>
+                <button class="btn btn--secondary admin-nav__tab" data-section="features">🚩 Feature Flags</button>
             </div>
 
             <!-- Overview Section -->
@@ -80,6 +81,40 @@
                 <h3 class="text-xl font-bold mb-4">Pending Approval</h3>
                 <div id="pendingCampaignsGrid">
                     <p class="text-secondary">Loading pending campaigns...</p>
+                </div>
+            </div>
+
+            <!-- Feature Flags Section -->
+            <div id="features" class="admin-section">
+                <h3 class="text-xl font-bold mb-4">🚩 Feature Flags Management</h3>
+                
+                <div class="card mb-5">
+                    <h4 class="card__title mb-3">Premium Feature Controls</h4>
+                    <p class="text-secondary mb-4">Toggle premium features on/off and simulate user tiers for testing.</p>
+                    
+                    <div id="featureFlagsGrid" class="grid grid-cols-1 gap-4">
+                        <p class="text-secondary">Loading feature flags...</p>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h4 class="card__title mb-3">User Tier Simulation</h4>
+                    <p class="text-secondary mb-4">Change user tiers for testing premium features.</p>
+                    
+                    <div class="flex gap-3 items-end">
+                        <div class="form-group flex-1">
+                            <label for="simulateUserId">User Email/ID:</label>
+                            <input type="text" id="simulateUserId" placeholder="Enter user email or ID" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label for="simulateTier">New Tier:</label>
+                            <select id="simulateTier" class="form-input">
+                                <option value="Free">Free</option>
+                                <option value="Premium">Premium</option>
+                            </select>
+                        </div>
+                        <button id="simulateTierBtn" class="btn btn--primary">Update Tier</button>
+                    </div>
                 </div>
             </div>
 
@@ -233,6 +268,8 @@
                 loadStats();
             } else if (section === 'create') {
                 initializeCreateForm();
+            } else if (section === 'features') {
+                loadFeatureFlags();
             }
         }
 
@@ -771,6 +808,123 @@
             
             await createCampaign(formData);
         });
+
+        // Feature Flags Management
+        async function loadFeatureFlags() {
+            try {
+                const response = await fetch('/api/features/flags', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (!response.ok) throw new Error('Failed to load feature flags');
+                
+                const data = await response.json();
+                renderFeatureFlags(data.flags, data.descriptions);
+            } catch (error) {
+                console.error('Error loading feature flags:', error);
+                document.getElementById('featureFlagsGrid').innerHTML = '<p class="text-error">Error loading feature flags</p>';
+            }
+        }
+
+        function renderFeatureFlags(flags, descriptions) {
+            const container = document.getElementById('featureFlagsGrid');
+            
+            container.innerHTML = Object.entries(flags).map(([flagName, isEnabled]) => `
+                <div class="card p-4">
+                    <div class="flex justify-between items-center">
+                        <div class="flex-1">
+                            <h5 class="font-bold mb-1">${flagName}</h5>
+                            <p class="text-secondary text-sm">${descriptions[flagName] || 'No description available'}</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="status-badge status-badge--${isEnabled ? 'success' : 'error'}">
+                                ${isEnabled ? 'Enabled' : 'Disabled'}
+                            </span>
+                            <button 
+                                class="btn btn--small ${isEnabled ? 'btn--error' : 'btn--success'}" 
+                                data-action="toggle-flag" 
+                                data-flag-name="${flagName}"
+                            >
+                                ${isEnabled ? 'Disable' : 'Enable'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function toggleFeatureFlag(flagName) {
+            try {
+                const response = await fetch('/api/features/toggle', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ flagName })
+                });
+                
+                if (!response.ok) throw new Error('Failed to toggle feature flag');
+                
+                const result = await response.json();
+                alert(`Feature flag ${flagName} is now ${result.newValue ? 'enabled' : 'disabled'}`);
+                
+                // Reload feature flags
+                loadFeatureFlags();
+            } catch (error) {
+                console.error('Error toggling feature flag:', error);
+                alert('Failed to toggle feature flag: ' + error.message);
+            }
+        }
+
+        async function simulateUserTier() {
+            const userIdInput = document.getElementById('simulateUserId').value.trim();
+            const tier = document.getElementById('simulateTier').value;
+            
+            if (!userIdInput) {
+                alert('Please enter a user email or ID');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/features/simulate-tier', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        userId: userIdInput,
+                        tier: tier 
+                    })
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Failed to simulate user tier');
+                }
+                
+                const result = await response.json();
+                alert(`User ${result.user.email} tier changed to ${result.user.tier}`);
+                
+                // Clear form
+                document.getElementById('simulateUserId').value = '';
+                document.getElementById('simulateTier').value = 'Free';
+            } catch (error) {
+                console.error('Error simulating user tier:', error);
+                alert('Failed to simulate user tier: ' + error.message);
+            }
+        }
+
+        // Feature flag event handlers
+        document.addEventListener('click', (e) => {
+            if (e.target.matches('[data-action="toggle-flag"]')) {
+                const flagName = e.target.dataset.flagName;
+                toggleFeatureFlag(flagName);
+            }
+        });
+
+        document.getElementById('simulateTierBtn').addEventListener('click', simulateUserTier);
 
         // Initialize
         loadUserInfo();

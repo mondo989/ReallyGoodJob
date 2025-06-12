@@ -64,6 +64,17 @@ module.exports = (sequelize) => {
       allowNull: true,
       comment: 'Optional personal note from user'
     },
+    personalizedMessage: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      comment: 'Premium feature: personalized message to append to emails'
+    },
+    frequency: {
+      type: DataTypes.ENUM('once', 'multiple'),
+      defaultValue: 'once',
+      allowNull: false,
+      comment: 'Premium feature: multiple sends per day'
+    },
     isActive: {
       type: DataTypes.BOOLEAN,
       defaultValue: true,

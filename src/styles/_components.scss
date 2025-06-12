@@ -499,6 +499,91 @@
   padding: $spacing-md;
 }
 
+// Premium Toggle Component
+.premium-toggle-container {
+  display: flex;
+  align-items: center;
+  margin-right: $spacing-md;
+}
+
+.premium-toggle {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+  user-select: none;
+  
+  &__input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+    
+    &:checked + .premium-toggle__slider {
+      @include theme-property(background, linear-gradient(135deg, #fbbf24, #f59e0b), linear-gradient(135deg, #fbbf24, #f59e0b));
+      @include theme-property(border-color, #f59e0b, #f59e0b);
+      
+      .premium-toggle__label {
+        color: white;
+        font-weight: 600;
+      }
+    }
+    
+    &:focus + .premium-toggle__slider {
+      @include theme-property(box-shadow, 0 0 0 2px rgba(59, 130, 246, 0.3), 0 0 0 2px rgba(147, 197, 253, 0.3));
+    }
+  }
+  
+  &__slider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 5rem;
+    height: 2rem;
+    @include theme-property(background-color, $light-bg-secondary, $dark-bg-secondary);
+    @include theme-property(border, 1px solid $light-border, 1px solid $dark-border);
+    border-radius: 1rem;
+    transition: all $transition-base;
+    padding: 0 $spacing-sm;
+    
+    &:hover {
+      @include theme-property(background-color, $light-bg-tertiary, $dark-bg-tertiary);
+      transform: scale(1.02);
+    }
+  }
+  
+  &__label {
+    font-size: $font-size-sm;
+    font-weight: 500;
+    @include theme-property(color, $light-text-secondary, $dark-text-secondary);
+    transition: all $transition-base;
+    white-space: nowrap;
+  }
+}
+
+// Notification animations
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideOutRight {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
 // Flexbox
 .flex-1 {
   flex: 1;
@@ -529,6 +614,10 @@
 // Additional text utilities
 .text-muted {
   @include theme-property(color, $light-text-muted, $dark-text-muted);
+}
+
+.text-warning {
+  @include theme-property(color, $light-warning, $dark-warning);
 }
 
 // Border utilities

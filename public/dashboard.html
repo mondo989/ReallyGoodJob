@@ -22,6 +22,14 @@
                     <span class="theme-toggle__icon theme-toggle__sun">☀️</span>
                     <span class="theme-toggle__icon theme-toggle__moon">🌙</span>
                 </button>
+                <div class="premium-toggle-container">
+                    <label class="premium-toggle" title="Toggle Premium Features for Testing">
+                        <input type="checkbox" id="premiumToggle" class="premium-toggle__input">
+                        <span class="premium-toggle__slider">
+                            <span class="premium-toggle__label">⭐ Premium</span>
+                        </span>
+                    </label>
+                </div>
                 <span id="userEmail" class="text-secondary"></span>
                 <button id="logoutBtn" class="btn btn--error">Logout</button>
             </div>
@@ -124,18 +132,59 @@
                 </div>
 
                 <div id="scheduleOptions" class="form-group" style="display: none;">
-                    <label for="sendWindow">Select Time Window:</label>
-                    <select id="sendWindow">
-                        <option value="morning">🌅 Morning (8:00 AM - 12:00 PM)</option>
-                        <option value="afternoon">☀️ Afternoon (12:00 PM - 5:00 PM)</option>
-                        <option value="evening">🌆 Evening (5:00 PM - 9:00 PM)</option>
+                    <label for="sendFrequency">Send Frequency:</label>
+                    <select id="sendFrequency">
+                        <option value="once">📧 Send Once</option>
+                        <option value="multiple" data-premium="true">🔄 Multiple Times (Premium)</option>
                     </select>
                     
-                    <label for="sendDate">Select Date:</label>
-                    <input type="date" id="sendDate" required>
+                    <div id="singleSendOptions">
+                        <label for="sendWindow">Select Time Window:</label>
+                        <select id="sendWindow">
+                            <option value="morning">🌅 Morning (8:00 AM - 12:00 PM)</option>
+                            <option value="afternoon">☀️ Afternoon (12:00 PM - 5:00 PM)</option>
+                            <option value="evening">🌆 Evening (5:00 PM - 9:00 PM)</option>
+                        </select>
+                        
+                        <label for="sendDate">Select Date:</label>
+                        <input type="date" id="sendDate" required>
+                    </div>
+                    
+                    <div id="multipleSendOptions" style="display: none;">
+                        <label>Select Time Windows (Premium Feature):</label>
+                        <div class="schedule-options">
+                            <label class="radio-option">
+                                <input type="checkbox" name="timeWindows" value="morning">
+                                <span>🌅 Morning (8:00 AM - 12:00 PM)</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="checkbox" name="timeWindows" value="afternoon">
+                                <span>☀️ Afternoon (12:00 PM - 5:00 PM)</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="checkbox" name="timeWindows" value="evening">
+                                <span>🌆 Evening (5:00 PM - 9:00 PM)</span>
+                            </label>
+                        </div>
+                        
+                        <label for="multipleSendDate">Select Date:</label>
+                        <input type="date" id="multipleSendDate" required>
+                        
+                        <p class="text-warning text-sm mt-2">
+                            ⭐ <strong>Premium Feature:</strong> Send the same campaign multiple times throughout the day for maximum impact.
+                        </p>
+                    </div>
                     
                     <p class="text-secondary text-sm mt-2">
                         📝 <strong>Note:</strong> Free tier allows 1 send per day. Premium tier allows up to 3 sends per day (one per time window).
+                    </p>
+                </div>
+
+                <div class="form-group">
+                    <label for="personalizedMessage">Personalized Message (Premium Feature):</label>
+                    <textarea id="personalizedMessage" placeholder="Add a personal touch to your appreciation email... (Premium users can customize this message)" rows="3"></textarea>
+                    <p class="text-warning text-sm mt-1">
+                        ⭐ <strong>Premium Feature:</strong> Add custom personalized content that will be included in your appreciation emails.
                     </p>
                 </div>
 
@@ -158,6 +207,42 @@
             // Store token and clean URL
             localStorage.setItem('authToken', token);
             window.history.replaceState({}, document.title, '/dashboard');
+        }
+
+        // Global user features
+        let userFeatures = null;
+        let premiumOverride = false;
+
+        // Load user features
+        async function loadUserFeatures() {
+            try {
+                const response = await fetch('/api/features', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to load user features');
+                }
+
+                const data = await response.json();
+                userFeatures = data.features;
+                
+                console.log('User features loaded:', userFeatures);
+                return userFeatures;
+            } catch (error) {
+                console.error('Error loading user features:', error);
+                // Default to free tier features
+                userFeatures = {
+                    multipleSends: false,
+                    personalizedMessages: false,
+                    advancedScheduling: false,
+                    userTier: 'Free',
+                    isPremium: false
+                };
+                return userFeatures;
+            }
         }
 
         // Load user info
@@ -294,29 +379,201 @@
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('sendDate').value = today;
             document.getElementById('sendDate').min = today;
+            document.getElementById('multipleSendDate').value = today;
+            document.getElementById('multipleSendDate').min = today;
+            
+            // Handle premium features UI
+            updatePremiumFeaturesUI();
             
             // Show modal
             document.getElementById('scheduleModal').classList.add('active');
         }
 
+        // Premium toggle functionality
+        function initializePremiumToggle() {
+            const premiumToggle = document.getElementById('premiumToggle');
+            
+            // Load saved state
+            premiumOverride = localStorage.getItem('premiumOverride') === 'true';
+            premiumToggle.checked = premiumOverride;
+            
+            // Update UI based on current state
+            updatePremiumToggleState();
+            
+            // Handle toggle changes
+            premiumToggle.addEventListener('change', (e) => {
+                premiumOverride = e.target.checked;
+                localStorage.setItem('premiumOverride', premiumOverride.toString());
+                updatePremiumToggleState();
+                updatePremiumFeaturesUI();
+                
+                // Show notification
+                const message = premiumOverride 
+                    ? '⭐ Premium features enabled for testing!' 
+                    : '📱 Premium features disabled - using actual tier.';
+                showNotification(message);
+            });
+        }
+        
+        function updatePremiumToggleState() {
+            const premiumToggle = document.getElementById('premiumToggle');
+            const slider = premiumToggle.nextElementSibling;
+            
+            if (premiumOverride) {
+                slider.style.background = 'linear-gradient(135deg, #fbbf24, #f59e0b)';
+                slider.style.borderColor = '#f59e0b';
+                slider.querySelector('.premium-toggle__label').style.color = 'white';
+                slider.querySelector('.premium-toggle__label').style.fontWeight = '600';
+            } else {
+                slider.style.background = '';
+                slider.style.borderColor = '';
+                slider.querySelector('.premium-toggle__label').style.color = '';
+                slider.querySelector('.premium-toggle__label').style.fontWeight = '';
+            }
+        }
+        
+        function showNotification(message) {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.textContent = message;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: var(--primary-color);
+                color: white;
+                padding: 12px 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                z-index: 10000;
+                font-weight: 500;
+                animation: slideInRight 0.3s ease-out;
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.style.animation = 'slideOutRight 0.3s ease-in';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
+        }
+        
+        // Get effective user features (considering override)
+        function getEffectiveUserFeatures() {
+            if (!userFeatures) return null;
+            
+            if (premiumOverride) {
+                return {
+                    ...userFeatures,
+                    multipleSends: true,
+                    personalizedMessages: true,
+                    advancedScheduling: true,
+                    isPremium: true,
+                    userTier: userFeatures.userTier + ' (Override)'
+                };
+            }
+            
+            return userFeatures;
+        }
+
+        // Update premium features UI
+        function updatePremiumFeaturesUI() {
+            const effectiveFeatures = getEffectiveUserFeatures();
+            if (!effectiveFeatures) return;
+            
+            const multipleOption = document.querySelector('#sendFrequency option[value="multiple"]');
+            const personalizedTextarea = document.getElementById('personalizedMessage');
+            
+            // Handle multiple sends feature
+            if (!effectiveFeatures.multipleSends) {
+                multipleOption.disabled = true;
+                multipleOption.textContent = '🔄 Multiple Times (Premium) - Upgrade Required';
+                multipleOption.style.color = '#999';
+            } else {
+                multipleOption.disabled = false;
+                multipleOption.textContent = premiumOverride 
+                    ? '🔄 Multiple Times (Premium Override)' 
+                    : '🔄 Multiple Times (Premium)';
+                multipleOption.style.color = '';
+            }
+            
+            // Handle personalized messages feature
+            if (!effectiveFeatures.personalizedMessages) {
+                personalizedTextarea.disabled = true;
+                personalizedTextarea.placeholder = 'Personalized messages are a Premium feature. Upgrade your account to unlock this feature.';
+                personalizedTextarea.style.backgroundColor = '#f5f5f5';
+                personalizedTextarea.style.color = '#999';
+            } else {
+                personalizedTextarea.disabled = false;
+                personalizedTextarea.placeholder = premiumOverride 
+                    ? 'Add a personal touch to your appreciation email... (Premium Override Active)'
+                    : 'Add a personal touch to your appreciation email...';
+                personalizedTextarea.style.backgroundColor = '';
+                personalizedTextarea.style.color = '';
+            }
+            
+            // Update tier display in user info if needed
+            const tierDisplay = document.getElementById('userTier');
+            if (tierDisplay) {
+                tierDisplay.textContent = effectiveFeatures.userTier;
+                if (effectiveFeatures.isPremium) {
+                    tierDisplay.classList.add('text-warning');
+                    tierDisplay.innerHTML = `${effectiveFeatures.userTier} ⭐`;
+                }
+            }
+        }
+
         // Send campaign emails
         async function sendCampaignEmails(campaignId, options = {}) {
-            const { mood, sendNow = true, window, date } = options;
+            const { 
+                mood, 
+                sendNow = true, 
+                frequency = 'once',
+                window, 
+                timeWindows = [],
+                date, 
+                personalizedMessage 
+            } = options;
             
             if (!mood) {
                 alert('Please select an email mood');
                 return;
             }
             
+            // Validate premium features
+            const effectiveFeatures = getEffectiveUserFeatures();
+            if (frequency === 'multiple' && !effectiveFeatures?.multipleSends) {
+                alert('Multiple sends per day is a Premium feature. Please upgrade your account to access this feature.');
+                return;
+            }
+            
+            if (personalizedMessage && !effectiveFeatures?.personalizedMessages) {
+                alert('Personalized messages are a Premium feature. Please upgrade your account to access this feature.');
+                return;
+            }
+            
             try {
                 const payload = {
                     mood: mood,
-                    sendNow: sendNow
+                    sendNow: sendNow,
+                    personalizedMessage: personalizedMessage
                 };
                 
                 if (!sendNow) {
-                    payload.window = window;
+                    payload.frequency = frequency;
                     payload.scheduledDate = date;
+                    
+                    if (frequency === 'multiple') {
+                        payload.timeWindows = timeWindows;
+                    } else {
+                        payload.window = window;
+                    }
                 }
                 
                 const response = await fetch(`/api/campaigns/${campaignId}/send`, {
@@ -328,14 +585,34 @@
                     body: JSON.stringify(payload)
                 });
                 
-                if (!response.ok) throw new Error('Failed to send emails');
-                
                 const result = await response.json();
                 
+                if (!response.ok) {
+                    // Handle premium feature errors specifically
+                    if (response.status === 403 && result.premiumFeature) {
+                        alert(`Premium Feature Required: ${result.error}`);
+                        return;
+                    }
+                    throw new Error(result.error || 'Failed to send emails');
+                }
+                
                 if (sendNow) {
-                    alert(`Success! ${result.sentCount || 0} emails sent with ${mood} mood.`);
+                    let message = `Success! ${result.sentCount || 0} emails sent with ${mood} mood.`;
+                    if (personalizedMessage) {
+                        message += ' (with personalized message)';
+                    }
+                    alert(message);
                 } else {
-                    alert(`Success! Campaign scheduled for ${window} window on ${date} with ${mood} mood.`);
+                    let message;
+                    if (frequency === 'multiple') {
+                        message = `Success! Campaign scheduled for ${timeWindows.length} time windows on ${date} with ${mood} mood.`;
+                    } else {
+                        message = `Success! Campaign scheduled for ${window} window on ${date} with ${mood} mood.`;
+                    }
+                    if (personalizedMessage) {
+                        message += ' (with personalized message)';
+                    }
+                    alert(message);
                 }
                 
                 // Close modal and refresh campaigns
@@ -392,6 +669,21 @@
             document.getElementById('cancelSchedule').addEventListener('click', () => {
                 document.getElementById('scheduleModal').classList.remove('active');
             });
+
+            // Send frequency change handler
+            document.getElementById('sendFrequency').addEventListener('change', (e) => {
+                const frequency = e.target.value;
+                const singleOptions = document.getElementById('singleSendOptions');
+                const multipleOptions = document.getElementById('multipleSendOptions');
+                
+                if (frequency === 'multiple') {
+                    singleOptions.style.display = 'none';
+                    multipleOptions.style.display = 'block';
+                } else {
+                    singleOptions.style.display = 'block';
+                    multipleOptions.style.display = 'none';
+                }
+            });
             
             // Close modal when clicking outside
             document.getElementById('scheduleModal').addEventListener('click', (e) => {
@@ -420,6 +712,7 @@
             document.getElementById('confirmSchedule').addEventListener('click', () => {
                 const mood = document.getElementById('emailMood').value;
                 const sendOption = document.querySelector('input[name="sendOption"]:checked').value;
+                const personalizedMessage = document.getElementById('personalizedMessage').value.trim();
                 
                 if (!mood) {
                     alert('Please select an email mood');
@@ -427,22 +720,57 @@
                 }
                 
                 if (sendOption === 'now') {
-                    sendCampaignEmails(currentCampaign.id, { mood, sendNow: true });
-                } else {
-                    const window = document.getElementById('sendWindow').value;
-                    const date = document.getElementById('sendDate').value;
-                    
-                    if (!date) {
-                        alert('Please select a date');
-                        return;
-                    }
-                    
                     sendCampaignEmails(currentCampaign.id, { 
                         mood, 
-                        sendNow: false, 
-                        window, 
-                        date 
+                        sendNow: true,
+                        personalizedMessage: personalizedMessage || null
                     });
+                } else {
+                    const frequency = document.getElementById('sendFrequency').value;
+                    
+                    if (frequency === 'multiple') {
+                        // Handle multiple sends (Premium feature)
+                        const selectedWindows = Array.from(document.querySelectorAll('input[name="timeWindows"]:checked'))
+                            .map(cb => cb.value);
+                        const date = document.getElementById('multipleSendDate').value;
+                        
+                        if (selectedWindows.length === 0) {
+                            alert('Please select at least one time window');
+                            return;
+                        }
+                        
+                        if (!date) {
+                            alert('Please select a date');
+                            return;
+                        }
+                        
+                        sendCampaignEmails(currentCampaign.id, { 
+                            mood, 
+                            sendNow: false, 
+                            frequency: 'multiple',
+                            timeWindows: selectedWindows,
+                            date,
+                            personalizedMessage: personalizedMessage || null
+                        });
+                    } else {
+                        // Handle single send
+                        const window = document.getElementById('sendWindow').value;
+                        const date = document.getElementById('sendDate').value;
+                        
+                        if (!date) {
+                            alert('Please select a date');
+                            return;
+                        }
+                        
+                        sendCampaignEmails(currentCampaign.id, { 
+                            mood, 
+                            sendNow: false, 
+                            frequency: 'once',
+                            window, 
+                            date,
+                            personalizedMessage: personalizedMessage || null
+                        });
+                    }
                 }
             });
         });
@@ -460,8 +788,14 @@
         });
 
         // Load user info and campaigns on page load
-        loadUserInfo();
-        loadActiveCampaigns();
+        async function initializeDashboard() {
+            await loadUserFeatures();
+            await loadUserInfo();
+            await loadActiveCampaigns();
+            initializePremiumToggle();
+        }
+        
+        initializeDashboard();
     </script>
 </body>
 </html> 

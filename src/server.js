@@ -19,6 +19,7 @@ const scheduleRoutes = require('./routes/scheduleRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
 const trackingRoutes = require('./routes/trackingRoutes');
+const featureFlagRoutes = require('./routes/featureFlagRoutes');
 
 // Import worker
 const sendWorker = require('./workers/sendWorker');
@@ -63,6 +64,7 @@ app.use('/api', recipientRoutes);
 app.use('/api', scheduleRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/features', featureFlagRoutes);
 app.use('/track', trackingRoutes);
 
 // Basic landing page route
