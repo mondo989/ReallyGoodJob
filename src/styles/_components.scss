@@ -403,4 +403,64 @@
     @include theme-property(color, #1e40af, #93c5fd);
     @include theme-property(border, 1px solid #bfdbfe, 1px solid #3b82f6);
   }
+}
+
+// Additional Width Utilities
+.w-1\/2 {
+  width: 50%;
+}
+
+.w-full {
+  width: 100%;
+}
+
+// Additional Padding Utilities
+.pr-4 {
+  padding-right: $spacing-lg;
+}
+
+.pl-4 {
+  padding-left: $spacing-lg;
+}
+
+// Additional Flexbox Utilities
+.flex {
+  display: flex;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.items-start {
+  align-items: flex-start;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.gap-3 {
+  gap: $spacing-md;
+}
+
+// Additional Text Utilities
+.text-sm {
+  font-size: $font-size-sm;
+}
+
+.text-xl {
+  font-size: $font-size-xl;
+}
+
+.text-2xl {
+  font-size: $font-size-2xl;
+}
+
+.font-bold {
+  font-weight: 600;
 } 
