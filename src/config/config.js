@@ -6,7 +6,11 @@ module.exports = {
   NODE_ENV: process.env.NODE_ENV || 'development',
   
   // Database Configuration
-  DATABASE_URL: process.env.DATABASE_URL,
+  DATABASE_URL: process.env.DATABASE_URL || (
+    process.env.NODE_ENV === 'production' 
+      ? 'file:/app/data/database.sqlite' 
+      : 'file:./database.sqlite'
+  ),
   
   // Google OAuth2 Configuration
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,

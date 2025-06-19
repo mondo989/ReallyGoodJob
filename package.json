@@ -34,6 +34,7 @@
     "uuid": "^9.0.1"
   },
   "devDependencies": {
+    "@flydotio/dockerfile": "^0.7.10",
     "nodemon": "^3.0.2",
     "sass": "^1.69.5",
     "sequelize-cli": "^6.6.2"
