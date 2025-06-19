@@ -371,11 +371,13 @@ body {
   
   &__actions {
     display: flex;
+    flex-direction: column;
     gap: $spacing-sm;
     
     .btn {
-      flex: 1;
+      width: 100%;
       justify-content: center;
+      font-size: $font-size-sm;
       
       &--primary {
         background: linear-gradient(135deg, #3b82f6, #2563eb);
@@ -383,6 +385,25 @@ body {
         &:hover {
           background: linear-gradient(135deg, #2563eb, #1d4ed8);
         }
+      }
+      
+      &--secondary {
+        @include theme-property(background-color, $light-bg-tertiary, $dark-bg-tertiary);
+        @include theme-property(color, $light-text-secondary, $dark-text-secondary);
+        @include theme-property(border, 1px solid $light-border, 1px solid $dark-border);
+        
+        &:hover {
+          @include theme-property(background-color, $light-bg-secondary, $dark-bg-secondary);
+          @include theme-property(color, $light-text-primary, $dark-text-primary);
+        }
+      }
+    }
+    
+    @media (min-width: 480px) {
+      flex-direction: row;
+      
+      .btn {
+        flex: 1;
       }
     }
   }
@@ -394,6 +415,154 @@ body {
   height: 6px;
   border-radius: 50%;
   display: inline-block;
+}
+
+// Sent Emails Components
+.sent-emails-list {
+  max-height: 400px;
+  overflow-y: auto;
+  border-radius: $border-radius;
+  @include theme-property(border, 1px solid $light-border, 1px solid $dark-border);
+}
+
+.sent-email-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: $spacing-md;
+  @include theme-property(border-bottom, 1px solid $light-border, 1px solid $dark-border);
+  cursor: pointer;
+  transition: all $transition-base;
+  
+  &:hover {
+    @include theme-property(background-color, $light-bg-secondary, $dark-bg-secondary);
+  }
+  
+  &:last-child {
+    border-bottom: none;
+  }
+  
+  &__info {
+    flex: 1;
+    
+    &__recipient {
+      font-weight: 600;
+      @include theme-property(color, $light-text-primary, $dark-text-primary);
+      margin-bottom: $spacing-xs;
+    }
+    
+    &__subject {
+      @include theme-property(color, $light-text-secondary, $dark-text-secondary);
+      font-size: $font-size-sm;
+      margin-bottom: $spacing-xs;
+      display: -webkit-box;
+      -webkit-line-clamp: 1;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    
+    &__date {
+      font-size: $font-size-xs;
+      @include theme-property(color, $light-text-muted, $dark-text-muted);
+    }
+  }
+  
+  &__status {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: $spacing-xs;
+    
+    &__mood {
+      font-size: $font-size-xs;
+      padding: $spacing-xs $spacing-sm;
+      border-radius: $border-radius-sm;
+      @include theme-property(background-color, $light-bg-tertiary, $dark-bg-tertiary);
+      @include theme-property(color, $light-text-secondary, $dark-text-secondary);
+    }
+    
+    &__read {
+      font-size: $font-size-xs;
+      
+      &--opened {
+        @include theme-property(color, $light-success, $dark-success);
+      }
+      
+      &--unopened {
+        @include theme-property(color, $light-text-muted, $dark-text-muted);
+      }
+    }
+  }
+}
+
+// Email Content Display
+.email-content-info {
+  .email-meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: $spacing-md;
+    margin-bottom: $spacing-xl;
+    padding: $spacing-md;
+    @include theme-property(background-color, $light-bg-secondary, $dark-bg-secondary);
+    border-radius: $border-radius;
+    
+    &__item {
+      font-size: $font-size-sm;
+      
+      strong {
+        @include theme-property(color, $light-text-primary, $dark-text-primary);
+      }
+      
+      span {
+        @include theme-property(color, $light-text-secondary, $dark-text-secondary);
+      }
+    }
+  }
+  
+  .email-content {
+    .email-subject {
+      margin-bottom: $spacing-lg;
+      padding: $spacing-md;
+      @include theme-property(background-color, $light-bg-tertiary, $dark-bg-tertiary);
+      border-radius: $border-radius;
+      
+      strong {
+        @include theme-property(color, $light-text-primary, $dark-text-primary);
+      }
+      
+      span {
+        @include theme-property(color, $light-text-secondary, $dark-text-secondary);
+        font-weight: 500;
+      }
+    }
+    
+    .email-body {
+      strong {
+        @include theme-property(color, $light-text-primary, $dark-text-primary);
+        display: block;
+        margin-bottom: $spacing-sm;
+      }
+    }
+    
+    .email-body-content {
+      padding: $spacing-lg;
+      @include theme-property(background-color, $light-bg-card, $dark-bg-card);
+      @include theme-property(border, 1px solid $light-border, 1px solid $dark-border);
+      border-radius: $border-radius;
+      font-family: 'Courier New', monospace;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      @include theme-property(color, $light-text-primary, $dark-text-primary);
+      max-height: 400px;
+      overflow-y: auto;
+    }
+  }
+}
+
+// Modal improvements
+.modal__content--large {
+  max-width: 800px;
+  width: 90vw;
 }
 
 // Admin specific styles

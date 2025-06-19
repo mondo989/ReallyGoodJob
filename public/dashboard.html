@@ -43,9 +43,14 @@
 
             <!-- Active Campaigns Section -->
             <section class="mt-6">
-                <div class="flex items-center gap-3 mb-4">
-                    <h2 class="text-2xl font-bold">🎯 Active Campaigns</h2>
-                    <span class="badge" style="display: inline-block; padding: 0.25rem 0.75rem; background-color: #4f46e5; color: white; border-radius: 9999px; font-weight: 600; font-size: 0.875rem;" id="campaignsCount">0</span>
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-3">
+                        <h2 class="text-2xl font-bold">🎯 Active Campaigns</h2>
+                        <span class="badge" style="display: inline-block; padding: 0.25rem 0.75rem; background-color: #4f46e5; color: white; border-radius: 9999px; font-weight: 600; font-size: 0.875rem;" id="campaignsCount">0</span>
+                    </div>
+                    <button id="createCampaignBtn" class="btn btn--primary btn--small">
+                        ➕ Create Campaign
+                    </button>
                 </div>
                 <div class="card p-0">
                     <div id="activeCampaigns" class="p-4">
@@ -271,6 +276,75 @@
         </div>
     </div>
 
+    <!-- Sent Emails Modal -->
+    <div id="sentEmailsModal" class="modal">
+        <div class="modal__content">
+            <div class="modal__header">
+                <h3>📧 Sent Emails</h3>
+                <button type="button" id="closeSentEmailsModal" class="modal__close">&times;</button>
+            </div>
+            
+            <div class="modal__body">
+                <div id="sentEmailsInfo" class="mb-4">
+                    <h4 id="sentEmailsCampaignName">Campaign Name</h4>
+                    <p id="sentEmailsSummary" class="text-secondary"></p>
+                </div>
+                
+                <div id="sentEmailsList" class="sent-emails-list">
+                    <!-- Emails will be loaded here -->
+                </div>
+                
+                <div id="sentEmailsLoading" class="loading" style="display: none;">
+                    <div class="loading__spinner"></div>
+                    <span class="loading__text">Loading sent emails...</span>
+                </div>
+                
+                <div id="sentEmailsError" class="alert alert--error" style="display: none;">
+                    Failed to load sent emails. Please try again.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Email Content Modal -->
+    <div id="emailContentModal" class="modal">
+        <div class="modal__content modal__content--large">
+            <div class="modal__header">
+                <h3>📧 Email Details</h3>
+                <button type="button" id="closeEmailContentModal" class="modal__close">&times;</button>
+            </div>
+            
+            <div class="modal__body">
+                <div id="emailContentInfo" class="email-content-info">
+                    <div class="email-meta">
+                        <div class="email-meta__item">
+                            <strong>To:</strong> <span id="emailRecipient"></span>
+                        </div>
+                        <div class="email-meta__item">
+                            <strong>Sent:</strong> <span id="emailSentDate"></span>
+                        </div>
+                        <div class="email-meta__item">
+                            <strong>Mood:</strong> <span id="emailMood"></span>
+                        </div>
+                        <div class="email-meta__item">
+                            <strong>Status:</strong> <span id="emailStatus"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="email-content">
+                        <div class="email-subject">
+                            <strong>Subject:</strong> <span id="emailSubject"></span>
+                        </div>
+                        <div class="email-body">
+                            <strong>Message:</strong>
+                            <div id="emailBody" class="email-body-content"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Get JWT token from URL params or localStorage
         const urlParams = new URLSearchParams(window.location.search);
@@ -467,6 +541,14 @@
                                         ${buttonDisabled}>
                                     ${buttonText}
                                 </button>
+                                ${campaign.emailsSent > 0 ? `
+                                    <button class="btn btn--secondary" 
+                                            data-action="view-sent-emails" 
+                                            data-campaign-id="${campaign.id}"
+                                            title="View ${campaign.emailsSent} sent emails">
+                                        📧 View Sent (${campaign.emailsSent})
+                                    </button>
+                                ` : ''}
                             </div>
                         </div>
                     `;
@@ -856,6 +938,97 @@
             }
         }
 
+        // Load and show sent emails for a campaign
+        async function showSentEmailsModal(campaignId) {
+            const campaign = allCampaigns.find(c => c.id === campaignId);
+            if (!campaign) return;
+            
+            // Show modal and loading state
+            document.getElementById('sentEmailsModal').classList.add('active');
+            document.getElementById('sentEmailsLoading').style.display = 'flex';
+            document.getElementById('sentEmailsList').style.display = 'none';
+            document.getElementById('sentEmailsError').style.display = 'none';
+            
+            // Set campaign info
+            document.getElementById('sentEmailsCampaignName').textContent = campaign.name;
+            document.getElementById('sentEmailsSummary').textContent = `Loading sent emails...`;
+            
+            try {
+                const response = await fetch(`/api/campaigns/${campaignId}/sent-emails`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) throw new Error('Failed to load sent emails');
+                
+                const data = await response.json();
+                
+                // Hide loading, show list
+                document.getElementById('sentEmailsLoading').style.display = 'none';
+                document.getElementById('sentEmailsList').style.display = 'block';
+                
+                // Update summary
+                document.getElementById('sentEmailsSummary').textContent = 
+                    `${data.totalSent} emails sent for this campaign`;
+                
+                // Render emails list
+                const emailsList = document.getElementById('sentEmailsList');
+                if (data.emails.length === 0) {
+                    emailsList.innerHTML = '<p class="text-secondary text-center p-4">No emails sent yet.</p>';
+                    return;
+                }
+                
+                emailsList.innerHTML = data.emails.map(email => {
+                    const sentDate = new Date(email.sentAt).toLocaleString();
+                    const readStatus = email.openedAt ? 'opened' : 'unopened';
+                    const readText = email.openedAt ? `Opened ${new Date(email.openedAt).toLocaleString()}` : 'Not opened yet';
+                    
+                    return `
+                        <div class="sent-email-item" data-email-id="${email.id}">
+                            <div class="sent-email-item__info">
+                                <div class="sent-email-item__info__recipient">${email.recipientName}</div>
+                                <div class="sent-email-item__info__subject">${email.subject}</div>
+                                <div class="sent-email-item__info__date">Sent: ${sentDate}</div>
+                            </div>
+                            <div class="sent-email-item__status">
+                                <div class="sent-email-item__status__mood">${email.mood}</div>
+                                <div class="sent-email-item__status__read sent-email-item__status__read--${readStatus}">
+                                    ${readText}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+                // Store emails data for later use
+                window.currentSentEmails = data.emails;
+                
+            } catch (error) {
+                console.error('Error loading sent emails:', error);
+                document.getElementById('sentEmailsLoading').style.display = 'none';
+                document.getElementById('sentEmailsError').style.display = 'block';
+            }
+        }
+
+        // Show individual email content
+        function showEmailContentModal(emailId) {
+            const email = window.currentSentEmails?.find(e => e.id === emailId);
+            if (!email) return;
+            
+            // Populate email details
+            document.getElementById('emailRecipient').textContent = `${email.recipientName} (${email.recipientEmail})`;
+            document.getElementById('emailSentDate').textContent = new Date(email.sentAt).toLocaleString();
+            document.getElementById('emailMood').textContent = email.mood;
+            document.getElementById('emailStatus').textContent = email.openedAt ? 
+                `Opened on ${new Date(email.openedAt).toLocaleString()}` : 'Not opened yet';
+            document.getElementById('emailSubject').textContent = email.subject;
+            document.getElementById('emailBody').textContent = email.body;
+            
+            // Show modal
+            document.getElementById('emailContentModal').classList.add('active');
+        }
+
         // Event handlers for dashboard buttons
         document.addEventListener('click', (e) => {
             const target = e.target;
@@ -867,7 +1040,16 @@
                     case 'schedule-campaign':
                         showScheduleModal(campaignId);
                         break;
+                    case 'view-sent-emails':
+                        showSentEmailsModal(campaignId);
+                        break;
                 }
+            }
+            
+            // Handle sent email item clicks
+            if (target.closest('.sent-email-item')) {
+                const emailId = target.closest('.sent-email-item').dataset.emailId;
+                showEmailContentModal(emailId);
             }
         });
 
@@ -880,6 +1062,28 @@
             
             document.getElementById('cancelSchedule').addEventListener('click', () => {
                 document.getElementById('scheduleModal').classList.remove('active');
+            });
+
+            // Sent emails modal handlers
+            document.getElementById('closeSentEmailsModal').addEventListener('click', () => {
+                document.getElementById('sentEmailsModal').classList.remove('active');
+            });
+            
+            document.getElementById('closeEmailContentModal').addEventListener('click', () => {
+                document.getElementById('emailContentModal').classList.remove('active');
+            });
+
+            // Close modals when clicking outside
+            document.getElementById('sentEmailsModal').addEventListener('click', (e) => {
+                if (e.target === document.getElementById('sentEmailsModal')) {
+                    document.getElementById('sentEmailsModal').classList.remove('active');
+                }
+            });
+            
+            document.getElementById('emailContentModal').addEventListener('click', (e) => {
+                if (e.target === document.getElementById('emailContentModal')) {
+                    document.getElementById('emailContentModal').classList.remove('active');
+                }
             });
 
             // Send frequency change handler
@@ -1011,6 +1215,10 @@
 
         document.getElementById('manageSchedulesBtn').addEventListener('click', () => {
             alert('Schedule management coming soon!');
+        });
+
+        document.getElementById('createCampaignBtn').addEventListener('click', () => {
+            alert('Campaign creation feature coming soon! In the MVP, campaigns are created and approved by admin users.');
         });
 
         // Load user info and campaigns on page load

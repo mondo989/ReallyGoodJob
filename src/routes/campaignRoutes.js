@@ -12,6 +12,7 @@ router.get('/campaigns/my', (req, res) => campaignController.getUserCampaigns(re
 router.get('/campaigns', (req, res) => campaignController.getActiveCampaigns(req, res));
 router.post('/campaigns', (req, res) => campaignController.createCampaign(req, res));
 router.get('/campaigns/:id', (req, res) => campaignController.getCampaignDetails(req, res));
+router.get('/campaigns/:id/sent-emails', (req, res) => campaignController.getCampaignSentEmails(req, res));
 router.post('/campaigns/:id/send', (req, res) => campaignController.sendCampaignEmails(req, res));
 
 module.exports = router; 

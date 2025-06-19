@@ -322,6 +322,76 @@ class CampaignController {
   }
 
   /**
+   * Get sent emails for a campaign
+   * GET /campaigns/:id/sent-emails
+   */
+  async getCampaignSentEmails(req, res) {
+    try {
+      const { id } = req.params;
+      const { EmailLog, TemplateMood, Recipient } = require('../models/database');
+
+      // Get campaign to verify access
+      const campaign = await Campaign.findOne({
+        where: { 
+          id,
+          status: config.CAMPAIGN_STATUS.ACTIVE
+        }
+      });
+
+      if (!campaign) {
+        return res.status(404).json({
+          error: 'Campaign not found'
+        });
+      }
+
+      // Get all sent emails for this campaign
+      const sentEmails = await EmailLog.findAll({
+        where: { 
+          campaignId: id,
+          status: config.EMAIL_STATUS.SENT
+        },
+        include: [
+          {
+            model: TemplateMood,
+            attributes: ['name']
+          },
+          {
+            model: Recipient,
+            attributes: ['email', 'displayName', 'personalizedName']
+          }
+        ],
+        order: [['sentAt', 'DESC']]
+      });
+
+      const emailsData = sentEmails.map(email => ({
+        id: email.id,
+        recipientEmail: email.Recipient.email,
+        recipientName: email.Recipient.personalizedName || email.Recipient.displayName,
+        subject: email.subjectSent,
+        body: email.bodySent,
+        mood: email.TemplateMood.name,
+        sentAt: email.sentAt,
+        openedAt: email.openedAt
+      }));
+
+      res.json({
+        success: true,
+        campaign: {
+          id: campaign.id,
+          name: campaign.name
+        },
+        emails: emailsData,
+        totalSent: emailsData.length
+      });
+    } catch (error) {
+      console.error('Error fetching sent emails:', error);
+      res.status(500).json({
+        error: 'Failed to fetch sent emails'
+      });
+    }
+  }
+
+  /**
    * Send or schedule emails for a campaign
    * POST /campaigns/:id/send
    */
