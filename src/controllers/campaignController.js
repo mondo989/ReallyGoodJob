@@ -4,6 +4,115 @@ const featureFlagService = require('../services/featureFlagService');
 
 class CampaignController {
   /**
+   * Get campaigns with statistics (emails sent, scheduled, etc.)
+   * GET /campaigns/with-stats
+   */
+  async getCampaignsWithStats(req, res) {
+    try {
+      const { EmailLog, SendSchedule } = require('../models/database');
+      
+      const campaigns = await Campaign.findAll({
+        where: { 
+          status: config.CAMPAIGN_STATUS.ACTIVE,
+          expirationAt: {
+            [require('sequelize').Op.gt]: new Date() // Not expired
+          }
+        },
+        include: [
+          {
+            model: User,
+            as: 'creator',
+            attributes: ['name']
+          },
+          {
+            model: Recipient,
+            as: 'Recipients'
+          }
+        ],
+        order: [['approvedAt', 'DESC']]
+      });
+
+      // Get statistics for each campaign
+      const campaignsWithStats = await Promise.all(
+        campaigns.map(async (campaign) => {
+          const recipientCount = campaign.Recipients.length;
+          
+          // Count sent emails
+          const sentEmails = await EmailLog.count({
+            where: { 
+              campaignId: campaign.id,
+              status: config.EMAIL_STATUS.SENT
+            }
+          });
+          
+          // Count failed emails
+          const failedEmails = await EmailLog.count({
+            where: { 
+              campaignId: campaign.id,
+              status: config.EMAIL_STATUS.FAILED
+            }
+          });
+          
+          // Count scheduled sends
+          const scheduledSends = await SendSchedule.count({
+            where: { 
+              campaignId: campaign.id,
+              isActive: true,
+              nextRunAt: {
+                [require('sequelize').Op.gt]: new Date()
+              }
+            }
+          });
+          
+          // Calculate status
+          let status = 'pending';
+          let statusText = 'Ready to Send';
+          
+          if (sentEmails > 0) {
+            if (sentEmails >= recipientCount) {
+              status = 'sent';
+              statusText = 'All Sent';
+            } else {
+              status = 'partial';
+              statusText = 'Partially Sent';
+            }
+          } else if (scheduledSends > 0) {
+            status = 'scheduled';
+            statusText = 'Scheduled';
+          }
+          
+          return {
+            id: campaign.id,
+            name: campaign.name,
+            description: campaign.description,
+            status: campaign.status,
+            createdBy: campaign.creator.name,
+            recipientCount: recipientCount,
+            emailsSent: sentEmails,
+            emailsFailed: failedEmails,
+            scheduledSends: scheduledSends,
+            emailStatus: status,
+            statusText: statusText,
+            progressPercentage: recipientCount > 0 ? Math.round((sentEmails / recipientCount) * 100) : 0,
+            approvedAt: campaign.approvedAt,
+            expirationAt: campaign.expirationAt
+          };
+        })
+      );
+
+      res.json({
+        success: true,
+        campaigns: campaignsWithStats
+      });
+    } catch (error) {
+      console.error('Error fetching campaigns with stats:', error);
+      res.status(500).json({
+        error: 'Failed to fetch campaigns with statistics'
+      });
+    }
+  }
+
+  /**
    * Get all active (approved) campaigns for browsing
    * GET /campaigns
    */
@@ -245,9 +354,10 @@ class CampaignController {
       });
 
       // Validate mood selection
-      if (!mood || !['Happy', 'Cheerful', 'Ecstatic'].includes(mood)) {
+      const validMoods = ['Happy', 'Cheerful', 'Ecstatic', 'Grateful', 'Professional', 'Warm', 'Enthusiastic', 'Heartfelt', 'Inspiring'];
+      if (!mood || !validMoods.includes(mood)) {
         return res.status(400).json({
-          error: 'Valid mood selection is required (Happy, Cheerful, or Ecstatic)'
+          error: `Valid mood selection is required. Available moods: ${validMoods.join(', ')}`
         });
       }
 

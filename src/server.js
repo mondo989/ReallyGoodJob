@@ -124,7 +124,13 @@ async function startServer() {
     await testConnection();
     
     // Sync database (create tables if they don't exist)
-    await syncDatabase();
+    // Force sync once to update enum values for moods
+    const forceSync = process.env.FORCE_DB_SYNC === 'true';
+    await syncDatabase(forceSync);
+    
+    // Initialize template moods
+    const templateService = require('./services/templateService');
+    await templateService.initializeTemplateMoods();
     
     // Start server
     const PORT = config.PORT;

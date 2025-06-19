@@ -48,7 +48,13 @@ module.exports = {
   MOODS: {
     HAPPY: 'Happy',
     CHEERFUL: 'Cheerful',
-    ECSTATIC: 'Ecstatic'
+    ECSTATIC: 'Ecstatic',
+    GRATEFUL: 'Grateful',
+    PROFESSIONAL: 'Professional',
+    WARM: 'Warm',
+    ENTHUSIASTIC: 'Enthusiastic',
+    HEARTFELT: 'Heartfelt',
+    INSPIRING: 'Inspiring'
   },
   
   EMAIL_STATUS: {

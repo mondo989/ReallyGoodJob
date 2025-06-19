@@ -13,7 +13,13 @@ module.exports = (sequelize) => {
       type: DataTypes.ENUM(
         config.MOODS.HAPPY,
         config.MOODS.CHEERFUL,
-        config.MOODS.ECSTATIC
+        config.MOODS.ECSTATIC,
+        config.MOODS.GRATEFUL,
+        config.MOODS.PROFESSIONAL,
+        config.MOODS.WARM,
+        config.MOODS.ENTHUSIASTIC,
+        config.MOODS.HEARTFELT,
+        config.MOODS.INSPIRING
       ),
       allowNull: false,
       unique: true
